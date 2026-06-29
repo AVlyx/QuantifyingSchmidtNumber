@@ -103,7 +103,12 @@ def nu_set_iterator(nu: list[int]) -> Generator[int]:
     yield from rec(0, 0)
 
 
-# k, d = 3,4
-# for v in nu_set_iterator([1,1,1]):
-#     print(v, end=", ")
-# print()
+# # k, d = 3,4
+# # for v in nu_set_iterator([1,1,1]):
+# #     print(v, end=", ")
+# # print()
+# def schur_polynomial(lam: list[int], x: list[float]) -> float:
+#     lam = sorted(lam, reverse=True)
+#     r = len(x)
+#     poly = _s[lam].expand(r).change_ring(sage.RDF)
+#     return float(poly(*[sage.RDF(xi) for xi in x]))
