@@ -102,13 +102,36 @@ def nu_set_iterator(nu: list[int]) -> Generator[int]:
 
     yield from rec(0, 0)
 
+    # # k, d = 3,4
+    # # for v in nu_set_iterator([1,1,1]):
+    # #     print(v, end=", ")
+    # # print()
+    # def schur_polynomial(lam: list[int], x: list[float]) -> float:
+    #     lam = sorted(lam, reverse=True)
+    #     r = len(x)
+    #     poly = _s[lam].expand(r).change_ring(sage.RDF)
+    #     return float(poly(*[sage.RDF(xi) for xi in x]))
 
-# # k, d = 3,4
-# # for v in nu_set_iterator([1,1,1]):
-# #     print(v, end=", ")
-# # print()
-# def schur_polynomial(lam: list[int], x: list[float]) -> float:
-#     lam = sorted(lam, reverse=True)
-#     r = len(x)
-#     poly = _s[lam].expand(r).change_ring(sage.RDF)
-#     return float(poly(*[sage.RDF(xi) for xi in x]))
+
+def isotopyc_I_perm(m: int, n: int, k: int) -> list[int]:
+    ret: list[int] = []
+
+    def recA(new_index: int, dim_num: int):
+        if dim_num >= k + 1:
+            recB(new_index, 1)
+            return
+        stride = (n * m) ** (k - dim_num) * n
+        for i in range(new_index, new_index + m * stride, stride):
+            recA(i, dim_num + 1)
+
+    def recB(new_index: int, dim_num: int):
+        if dim_num >= k + 1:
+            ret.append(new_index)
+            return
+
+        stride = (n * m) ** (k - dim_num)
+        for i in range(new_index, new_index + n * stride, stride):
+            recB(i, dim_num + 1)
+
+    recA(0, 1)
+    return ret
