@@ -1,7 +1,11 @@
+import picos
+
+if __name__ == "__main__":
+    print(picos.available_solvers())
+
 import numpy as np
 from SDP_utils.SDP_matrices import V_builder, alpha_dag_j_builder, isotypic_ot_I, W_l_builder
 from SDP_utils.combinatorics import dim_sym_kd
-import picos
 
 
 def SDP(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", verbose=False):
