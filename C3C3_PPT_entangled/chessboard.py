@@ -1,5 +1,9 @@
 from toqito.states import chessboard
 
 
-def C3C3_chessboard():
-    return chessboard([1, 2, 3, 4, 5, 6], 7, 8)
+def extremal_PPT_chessboard():
+    return chessboard([3 / 5, -3 / 5, 6 / 5, -6 / 5, -3 / 5, -3 / 5])
+
+
+if __name__ == "__main__":
+    print(extremal_PPT_chessboard())
