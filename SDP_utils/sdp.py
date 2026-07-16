@@ -20,7 +20,7 @@ def SDP(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", verbose=
     VPi = picos.Constant(V @ isotypic_ot_I(m, n, k, lam) @ V.T)
     Wls = [(picos.Constant(W_l_builder(k, d, l)), dim_sym_kd(l, d), dim_sym_kd(k - l, d)) for l in range(1, k // 2 + 1)]
 
-    P = picos.Problem(verbose=verbose)
+    P = picos.Problem(verbosity=verbose)
     omega_sym = picos.HermitianVariable("omega_sym", sym_d)
 
     # objective:  min tr( (V Pi^lam(x)I V^dag) omega_sym )
@@ -54,7 +54,7 @@ def SDP_max(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", verb
     VPi = picos.Constant(V @ isotypic_ot_I(m, n, k, lam) @ V.T)
     Wls = [(picos.Constant(W_l_builder(k, d, l)), dim_sym_kd(l, d), dim_sym_kd(k - l, d)) for l in range(1, k // 2 + 1)]
 
-    P = picos.Problem(verbose=verbose)
+    P = picos.Problem(verbosity=verbose)
     omega_sym = picos.HermitianVariable("omega_sym", sym_d)
 
     # objective:  max tr( (V Pi^lam(x)I V^dag) omega_sym )

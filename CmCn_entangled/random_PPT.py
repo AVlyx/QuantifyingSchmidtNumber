@@ -22,3 +22,10 @@ def random_not_PPT_gen(m: int, n: int):
         return CmCn_random_not_PPT(m, n)
 
     return gen
+
+
+def random_PPT_gen(m: int, n: int):
+    def gen(p):
+        return CmCn_random_PPT(m, n)
+
+    return gen
