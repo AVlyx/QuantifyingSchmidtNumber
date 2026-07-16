@@ -1,0 +1,28 @@
+{
+  "p_vals": [
+    0.0
+  ],
+  "obj_vals": [
+    -3.712939193947773e-09
+  ],
+  "separable": [
+    true
+  ],
+  "Etl_vals": [
+    0.0
+  ],
+  "obj_max_vals": [
+    0.37500000338041795
+  ],
+  "Etu_vals": [
+    1.0
+  ],
+  "m": 4,
+  "label": "pianni_maxmixed",
+  "range": [
+    0.0,
+    1.0,
+    0.05
+  ],
+  "k": 2
+}

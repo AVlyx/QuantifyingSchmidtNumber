@@ -7,7 +7,7 @@ import numpy as np
 def P_ij(i: int, j: int):
     sigma_ij = np.kron(np.identity(4), np.kron(pauli(i), pauli(j)))  # type: ignore
     ket_ij = sigma_ij @ max_entangled(4)
-    return np.outer(ket_ij, ket_ij)
+    return np.outer(ket_ij, ket_ij.conj())
 
 
 def pianni():
