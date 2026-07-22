@@ -1,9 +1,7 @@
-from typing import Generator
-
 import numpy as np
 
 
-def convex_combination(A: np.ndarray, B: np.ndarray, p_low: float, p_high: float, p_step: float) -> Generator[tuple[float, np.ndarray]]:
+def convex_combination(A: np.ndarray, B: np.ndarray, p_low: float, p_high: float, p_step: float):
     assert p_step > 0
     assert p_low >= 0
     assert p_high <= 1

@@ -1,6 +1,4 @@
 from math import comb, factorial, prod
-from typing import Generator
-
 
 def multinomial(k, nu) -> int:
     return factorial(k) // prod(factorial(n) for n in nu)
@@ -57,7 +55,7 @@ def occupation_index(stars, k, d):
 # assert tuple([occupation_index(occupation_nu(i, 6, 3), 6, 3) for i in range(dim_sym_kd(6, 3))]) == tuple(range(dim_sym_kd(6, 3)))
 
 
-def nu_iterator(k: int, d: int) -> Generator[list[int]]:
+def nu_iterator(k: int, d: int):
     "iterate over all vector nu in C^d^k"
     ret = [0] * d
 
@@ -84,12 +82,12 @@ def nu_iterator(k: int, d: int) -> Generator[list[int]]:
 # print()
 
 
-def nu_set_iterator(nu: list[int]) -> Generator[int]:
+def nu_set_iterator(nu: list[int]):
     "iterate over all the basis vector corresponding to nu"
     d = len(nu)
     k = sum(nu)
 
-    def rec(j: int, ret: int) -> Generator[int]:
+    def rec(j: int, ret: int):
         if sum(nu) == 0:
             yield ret
         for i in range(len(nu)):

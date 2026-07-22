@@ -1,4 +1,3 @@
 numpy
-toqito
 qics
-bound-entangled>=0.1.1
+bound-entangled>=0.1.2
