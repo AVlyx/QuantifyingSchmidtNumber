@@ -34,9 +34,9 @@ def SDP(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", verbose=
     P.add_constraint(marg == picos.Constant("rho", rho))
 
     # (3) PPT on the l | k-l cuts,  l = 1 .. floor(k/2)
-    for Wl, dl, dkl in Wls:
-        B = Wl * omega_sym * Wl.T
-        P.add_constraint(B.partial_transpose(subsystems=0, dimensions=(dl, dkl)) >> 0)  # type: ignore
+    # for Wl, dl, dkl in Wls:
+    #    B = Wl * omega_sym * Wl.T
+    #    P.add_constraint(B.partial_transpose(subsystems=0, dimensions=(dl, dkl)) >> 0)  # type: ignore
 
     P.solve(solver=solver)
     return P.value, omega_sym.value

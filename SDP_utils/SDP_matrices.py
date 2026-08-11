@@ -2,9 +2,10 @@ import math
 import numpy as np
 from SDP_utils.combinatorics import occupation_index, nu_set_iterator, multinomial, nu_iterator, dim_sym_kd, isotopyc_I_perm
 from SDP_utils.isotopic_proj import isotypic_projector
+from scipy import sparse
 
 
-def V_builder(k: int, d: int) -> np.ndarray:
+def V_builder(k: int, d: int):
     V = np.zeros((math.comb(k + d - 1, k), d**k))
     for nu in nu_iterator(k, d):
         fact = 1.0 / math.sqrt(multinomial(k, nu))
@@ -13,17 +14,17 @@ def V_builder(k: int, d: int) -> np.ndarray:
     return V
 
 
-def V_l_V_kl_builder(k: int, d: int, l: int) -> np.ndarray:
+def V_l_V_kl_builder(k: int, d: int, l: int):
     Vl = V_builder(l, d)
     Vkl = V_builder(k - l, d)
-    return np.kron(Vl, Vkl)
+    return sparse.csr_matrix(np.kron(Vl, Vkl))
 
 
-def W_l_builder(k: int, d: int, l: int) -> np.ndarray:
-    return V_l_V_kl_builder(k, d, l) @ V_builder(k, d).transpose()
+def W_l_builder(k: int, d: int, l: int):
+    return sparse.csr_matrix(V_l_V_kl_builder(k, d, l) @ V_builder(k, d).transpose())
 
 
-def isotypic_ot_I(m, n, k, lam) -> np.ndarray:
+def isotypic_ot_I(m, n, k, lam):
 
     Pi_lambda = isotypic_projector(lam, m, k)
     I = np.identity(n**k)
