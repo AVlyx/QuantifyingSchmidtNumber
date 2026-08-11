@@ -21,7 +21,17 @@ def V_l_V_kl_builder(k: int, d: int, l: int):
 
 
 def W_l_builder(k: int, d: int, l: int):
-    return sparse.csr_matrix(V_l_V_kl_builder(k, d, l) @ V_builder(k, d).transpose())
+    dl, dkl = dim_sym_kd(l, d), dim_sym_kd(k - l, d)
+    rows, cols, vals = [], [], []
+    for mu in nu_iterator(l, d):
+        i_mu = occupation_index(mu, l, d)
+        m_mu = multinomial(l, mu)
+        for nu in nu_iterator(k - l, d):
+            tau = [a + b for a, b in zip(mu, nu)]
+            rows.append(i_mu * dkl + occupation_index(nu, k - l, d))
+            cols.append(occupation_index(tau, k, d))
+            vals.append(math.sqrt(m_mu * multinomial(k - l, nu) / multinomial(k, tau)))
+    return sparse.csr_matrix((vals, (rows, cols)), shape=(dl * dkl, dim_sym_kd(k, d)))
 
 
 def isotypic_ot_I(m, n, k, lam):

@@ -8,7 +8,7 @@ from SDP_utils.SDP_matrices import V_builder, alpha_dag_j_builder, isotypic_ot_I
 from SDP_utils.combinatorics import dim_sym_kd
 
 
-def SDP(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", verbose=False):
+def SDP(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", verbose=False, real=False):
     k = sum(lam)
     d, _ = rho.shape
     assert d == m * n
@@ -21,7 +21,7 @@ def SDP(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", verbose=
     Wls = [(picos.Constant(W_l_builder(k, d, l)), dim_sym_kd(l, d), dim_sym_kd(k - l, d)) for l in range(1, k // 2 + 1)]
 
     P = picos.Problem(verbosity=verbose)
-    omega_sym = picos.HermitianVariable("omega_sym", sym_d)
+    omega_sym = picos.SymmetricVariable("omega_sym", sym_d) if real else picos.HermitianVariable("omega_sym", sym_d)
 
     # objective:  min tr( (V Pi^lam(x)I V^dag) omega_sym )
     P.set_objective("min", picos.trace(VPi * omega_sym).real)  # type: ignore
@@ -34,15 +34,15 @@ def SDP(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", verbose=
     P.add_constraint(marg == picos.Constant("rho", rho))
 
     # (3) PPT on the l | k-l cuts,  l = 1 .. floor(k/2)
-    # for Wl, dl, dkl in Wls:
-    #    B = Wl * omega_sym * Wl.T
-    #    P.add_constraint(B.partial_transpose(subsystems=0, dimensions=(dl, dkl)) >> 0)  # type: ignore
+    for Wl, dl, dkl in Wls:
+        B = Wl * omega_sym * Wl.T
+        P.add_constraint(B.partial_transpose(subsystems=0, dimensions=(dl, dkl)) >> 0)  # type: ignore
 
     P.solve(solver=solver)
     return P.value, omega_sym.value
 
 
-def SDP_max(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", verbose=False):
+def SDP_max(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", verbose=False, real=False):
     k = sum(lam)
     d, _ = rho.shape
     assert d == m * n
@@ -55,7 +55,7 @@ def SDP_max(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", verb
     Wls = [(picos.Constant(W_l_builder(k, d, l)), dim_sym_kd(l, d), dim_sym_kd(k - l, d)) for l in range(1, k // 2 + 1)]
 
     P = picos.Problem(verbosity=verbose)
-    omega_sym = picos.HermitianVariable("omega_sym", sym_d)
+    omega_sym = picos.SymmetricVariable("omega_sym", sym_d) if real else picos.HermitianVariable("omega_sym", sym_d)
 
     # objective:  max tr( (V Pi^lam(x)I V^dag) omega_sym )
     P.set_objective("max", picos.trace(VPi * omega_sym).real)  # type: ignore
@@ -76,7 +76,7 @@ def SDP_max(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", verb
     return P.value, omega_sym.value
 
 
-def SDP_full(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics"):
+def SDP_full(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", real=False):
     """Schmidt-number SDP on the full (C^d)^{ot k} space — no symmetric reduction.
 
     Variable: omega_{1..k} in C^{d^k x d^k}, d = m*n (each copy is one A_iB_i system).
@@ -91,7 +91,7 @@ def SDP_full(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics"):
     rho_c = picos.Constant("rho", rho)
 
     P = picos.Problem()
-    omega = picos.HermitianVariable("omega", Dk)
+    omega = picos.SymmetricVariable("omega", Dk) if real else picos.HermitianVariable("omega", Dk)
 
     # objective:  min tr( (Pi^lam (x) I) omega )
     P.set_objective("min", picos.trace(PiI * omega).real)  # type: ignore
