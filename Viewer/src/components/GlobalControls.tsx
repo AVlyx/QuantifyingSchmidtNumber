@@ -49,7 +49,9 @@ export function GlobalControls({ settings, onPatch, onClearAll, canClear }: Prop
         />
         <span>
           Show separable states
-          <em className="control__hint">off = only certified-entangled points</em>
+          <em className="control__hint">
+            off = drops certified-separable points; inconclusive ones stay
+          </em>
         </span>
       </label>
 

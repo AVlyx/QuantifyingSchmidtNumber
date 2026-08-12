@@ -10,6 +10,8 @@ export interface Figure {
   layout: Layout;
   /** Legend labels of visible files left with nothing to draw after the separable filter. */
   emptyAfterFilter: string[];
+  /** Verdicts actually drawn, ascending — the marker key lists these and only these. */
+  verdicts: Verdict[];
 }
 
 const SURFACE = "#ffffff";
@@ -17,12 +19,28 @@ const INK = "#1c1c1a";
 const INK_MUTED = "#6b6b66";
 const GRID = "#e6e6e2";
 
-/** Marker symbol per separability verdict — the three shapes the notebook's matplotlib used. */
-export const VERDICT_SYMBOL: Record<Verdict, string> = {
-  0: "circle",
-  1: "hexagon",
-  2: "x-thin",
+/**
+ * Marker style per separability verdict. All three points of a series share its color, so the
+ * shape carries the verdict on its own: a filled disc, a hollow diamond and a cross are told
+ * apart at a glance, where the old circle/hexagon pair read as the same dot at marker size.
+ */
+export interface VerdictStyle {
+  symbol: string;
+  size: number;
+  /** Stroke-only symbols need the series color to be visible at all; filled ones take a
+   *  surface-colored ring so overlapping series stay separable. */
+  outline: "series" | "surface";
+  outlineWidth: number;
+}
+
+export const VERDICT_STYLE: Record<Verdict, VerdictStyle> = {
+  0: { symbol: "circle", size: 8, outline: "surface", outlineWidth: 1.5 },
+  1: { symbol: "diamond-open", size: 11, outline: "series", outlineWidth: 2 },
+  2: { symbol: "x-thin", size: 10, outline: "series", outlineWidth: 2 },
 };
+
+const sortedVerdicts = (seen: Set<Verdict>): Verdict[] =>
+  ([0, 1, 2] as Verdict[]).filter((v) => seen.has(v));
 
 /**
  * The notebook's `eps` substitution, now user-settable: a log axis cannot draw
@@ -90,6 +108,7 @@ const baseLayout = (settings: Settings): Layout => ({
 function buildLineFigure(files: DataFile[], settings: Settings): Figure {
   const emptyAfterFilter: string[] = [];
   const data: Trace[] = [];
+  const verdicts = new Set<Verdict>();
 
   for (const file of files) {
     const records = visibleSlice(file.records, settings.xMin);
@@ -98,6 +117,7 @@ function buildLineFigure(files: DataFile[], settings: Settings): Figure {
       emptyAfterFilter.push(file.label);
       continue;
     }
+    for (const rec of kept) verdicts.add(rec.separable);
 
     const x = records.map((r) => r.p);
     // Filtered-out points stay in place as nulls so `connectgaps: false` breaks the line
@@ -117,13 +137,13 @@ function buildLineFigure(files: DataFile[], settings: Settings): Figure {
       line: { color: file.color, width: 2 },
       marker: {
         color: file.color,
-        size: 8,
-        symbol: records.map((r) => VERDICT_SYMBOL[r.separable]),
+        size: records.map((r) => VERDICT_STYLE[r.separable].size),
+        symbol: records.map((r) => VERDICT_STYLE[r.separable].symbol),
         line: {
-          // `x-thin` is a stroke-only symbol and needs a visible outline; filled symbols
-          // get a surface-colored ring so overlapping series stay separable.
-          color: records.map((r) => (r.separable === 2 ? file.color : SURFACE)),
-          width: records.map((r) => (r.separable === 2 ? 2 : 1.5)),
+          color: records.map((r) =>
+            VERDICT_STYLE[r.separable].outline === "series" ? file.color : SURFACE,
+          ),
+          width: records.map((r) => VERDICT_STYLE[r.separable].outlineWidth),
         },
       },
       customdata: records.map((r) => [fmt(r.Etl), VERDICT_LABEL[r.separable], fmt(r.obj)]),
@@ -175,6 +195,7 @@ function buildLineFigure(files: DataFile[], settings: Settings): Figure {
   return {
     data,
     emptyAfterFilter,
+    verdicts: sortedVerdicts(verdicts),
     layout: {
       ...baseLayout(settings),
       xaxis: {
@@ -216,6 +237,7 @@ function buildHistogramFigure(files: DataFile[], settings: Settings): Figure {
   const lowerHover: string[][] = [];
   const upper: (number | null)[] = [];
   const upperHover: string[][] = [];
+  const verdicts = new Set<Verdict>();
 
   for (const file of files) {
     // The whole sweep, not the x window: the histogram has no p axis for that window to mean anything.
@@ -233,8 +255,15 @@ function buildHistogramFigure(files: DataFile[], settings: Settings): Figure {
 
     labels.push(file.label);
     colors.push(file.color);
+    verdicts.add(best.separable);
     lower.push(floorValue(best.Etl, settings.zeroFloor));
-    lowerText.push(fmtShort(best.Etl));
+    // A bar has no marker to carry the verdict, so anything short of a certified-entangled
+    // winner is spelled out under the value rather than left to the tooltip.
+    lowerText.push(
+      best.separable === 0
+        ? fmtShort(best.Etl)
+        : `${fmtShort(best.Etl)}<br>(${VERDICT_LABEL[best.separable]})`,
+    );
     lowerHover.push([fmt(best.Etl), String(best.p), VERDICT_LABEL[best.separable]]);
     upper.push(best.Etu === null ? null : floorValue(best.Etu, settings.zeroFloor));
     upperHover.push([fmt(best.Etu), String(best.p)]);
@@ -290,6 +319,7 @@ function buildHistogramFigure(files: DataFile[], settings: Settings): Figure {
   return {
     data,
     emptyAfterFilter,
+    verdicts: sortedVerdicts(verdicts),
     layout: {
       ...baseLayout(settings),
       barmode: "group",

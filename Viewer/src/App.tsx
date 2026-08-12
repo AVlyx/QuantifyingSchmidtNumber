@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type ReactNode } from 'react';
 import { PlotView } from './components/PlotView.tsx';
 import { Sidebar } from './components/Sidebar.tsx';
 import { buildFigure } from './lib/buildTraces.ts';
@@ -6,17 +6,17 @@ import { nextColor } from './lib/palette.ts';
 import { parseResultFile } from './lib/parseJsonl.ts';
 import { prettyLabel } from './lib/prettyLabel.ts';
 import { usePersistedState } from './lib/usePersistedState.ts';
-import type { DataFile } from './types.ts';
+import { VERDICT_LABEL, type DataFile, type Verdict } from './types.ts';
 
-/** Drawn rather than typed: the hexagon has no reliable unicode glyph across fonts. */
-const SYMBOL_KEY = [
-  { label: 'entangled', shape: <circle cx="7" cy="7" r="5" /> },
-  { label: 'inconclusive', shape: <polygon points="7,1.8 12,4.6 12,9.4 7,12.2 2,9.4 2,4.6" /> },
-  {
-    label: 'separable',
-    shape: <path d="M3 3 L11 11 M11 3 L3 11" stroke="currentColor" strokeWidth="1.8" fill="none" />,
-  },
-];
+/** Drawn rather than typed, one per `VERDICT_STYLE` entry: no unicode glyph matches the
+ *  plotly symbols closely enough to be read as the same mark. */
+const SYMBOL_KEY: Record<Verdict, ReactNode> = {
+  0: <circle cx="7" cy="7" r="4.5" />,
+  1: (
+    <polygon points="7,1 12.5,7 7,13 1.5,7" fill="none" stroke="currentColor" strokeWidth="1.8" />
+  ),
+  2: <path d="M3 3 L11 11 M11 3 L3 11" stroke="currentColor" strokeWidth="1.8" fill="none" />,
+};
 
 export default function App() {
   const [state, dispatch, storageError] = usePersistedState();
@@ -49,7 +49,9 @@ export default function App() {
   );
 
   const hasPlottable = files.some((f) => f.visible && !f.error && f.records.length > 0);
-  const showSymbolKey = settings.chartMode === 'line' && settings.showSeparable && hasPlottable;
+  // Listed whenever markers are on screen — with the separable filter on, the plot still
+  // mixes entangled and inconclusive points, which is exactly when the key is needed.
+  const showSymbolKey = settings.chartMode === 'line' && figure.verdicts.length > 0;
 
   return (
     <div className="app">
@@ -72,12 +74,12 @@ export default function App() {
             {showSymbolKey && (
               <div className="symbol-key">
                 <span className="symbol-key__title">Marker shape:</span>
-                {SYMBOL_KEY.map((entry) => (
-                  <span key={entry.label} className="symbol-key__item">
+                {figure.verdicts.map((verdict) => (
+                  <span key={verdict} className="symbol-key__item">
                     <svg viewBox="0 0 14 14" width="13" height="13" fill="currentColor" aria-hidden>
-                      {entry.shape}
+                      {SYMBOL_KEY[verdict]}
                     </svg>
-                    {entry.label}
+                    {VERDICT_LABEL[verdict]}
                   </span>
                 ))}
                 {settings.showUpperBound && (
