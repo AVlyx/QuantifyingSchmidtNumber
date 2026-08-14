@@ -1,11 +1,12 @@
-from bound_entangled.cm_otimes_cn import grid_state
-from toqito.state_props import is_pure
+from bound_entangled.c3_otimes_c3 import cross_hatch, tiles_upb
+from toqito.state_props import is_separable
+import numpy as np
 
-grid_ex = grid_state(
-    (4, 4),
-    ((0, 0), (1, 1)),
-    ((1, 2), (2, 3)),
-    ((0, 3), (3, 0)),
-)
+p = 0.35
+state = p * cross_hatch() + (1-p) * tiles_upb()
 
-print(is_pure(grid_ex))
+# print(state)
+
+print(np.trace(state))
+
+print(is_separable(state, level=5))
