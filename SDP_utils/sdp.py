@@ -8,9 +8,17 @@ from SDP_utils.SDP_matrices import V_builder, alpha_dag_j_builder, isotypic_ot_I
 from SDP_utils.combinatorics import dim_sym_kd
 
 
-def SDP(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", verbose=False, real=False):
+def SDP(
+    lam: list[int],
+    rho: np.ndarray,
+    dims: tuple[int, int],
+    solver="qics",
+    verbose=False,
+    real=False,
+) -> tuple[float, np.ndarray]:
     k = sum(lam)
     d, _ = rho.shape
+    m, n = dims
     assert d == m * n
 
     sym_d: int = dim_sym_kd(k, d)
@@ -42,9 +50,17 @@ def SDP(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", verbose=
     return P.value, omega_sym.value
 
 
-def SDP_max(lam: list[int], rho: np.ndarray, m: int, n: int, solver="qics", verbose=False, real=False):
+def SDP_max(
+    lam: list[int],
+    rho: np.ndarray,
+    dims: tuple[int, int],
+    solver="qics",
+    verbose=False,
+    real=False,
+):
     k = sum(lam)
     d, _ = rho.shape
+    m, n = dims
     assert d == m * n
 
     sym_d: int = dim_sym_kd(k, d)

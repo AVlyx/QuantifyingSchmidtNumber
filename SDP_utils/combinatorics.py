@@ -1,5 +1,6 @@
 from math import comb, factorial, prod
 
+
 def multinomial(k, nu) -> int:
     return factorial(k) // prod(factorial(n) for n in nu)
 
@@ -111,25 +112,46 @@ def nu_set_iterator(nu: list[int]):
     #     return float(poly(*[sage.RDF(xi) for xi in x]))
 
 
-def isotopyc_I_perm(m: int, n: int, k: int) -> list[int]:
-    ret: list[int] = []
+# def isotopyc_I_perm(m: int, n: int, k: int) -> list[int]:
+#     ret: list[int] = []
 
-    def recA(new_index: int, dim_num: int):
-        if dim_num >= k + 1:
-            recB(new_index, 1)
-            return
-        stride = (n * m) ** (k - dim_num) * n
-        for i in range(new_index, new_index + m * stride, stride):
-            recA(i, dim_num + 1)
+#     def recA(new_index: int, dim_num: int):
+#         if dim_num >= k + 1:
+#             recB(new_index, 1)
+#             return
+#         stride = (n * m) ** (k - dim_num) * n
+#         for i in range(new_index, new_index + m * stride, stride):
+#             recA(i, dim_num + 1)
 
-    def recB(new_index: int, dim_num: int):
-        if dim_num >= k + 1:
-            ret.append(new_index)
-            return
+#     def recB(new_index: int, dim_num: int):
+#         if dim_num >= k + 1:
+#             ret.append(new_index)
+#             return
 
-        stride = (n * m) ** (k - dim_num)
-        for i in range(new_index, new_index + n * stride, stride):
-            recB(i, dim_num + 1)
+#         stride = (n * m) ** (k - dim_num)
+#         for i in range(new_index, new_index + n * stride, stride):
+#             recB(i, dim_num + 1)
 
-    recA(0, 1)
-    return ret
+#     recA(0, 1)
+#     return ret
+
+# # * Checking to see if I implemented isotopyc_I_perm for nothing
+# from toqito.perms import permute_systems
+# import numpy as np
+# from isotopic_proj import isotypic_projector
+
+# lam = [2, 1]
+# m, n, k = 5, 4, 3
+# Pi_lambda = isotypic_projector(lam, m, k)
+# I = np.identity(n**k)
+# M = np.kron(Pi_lambda, I)  # ordered A_1..A_k B_1..B_k
+# perm = np.asarray(isotopyc_I_perm(m, n, k))
+# inv = np.argsort(perm)
+# ancientAfterPerm = M[np.ix_(inv, inv)]  # now ordered A_1 B_1 ... A_k B_k
+
+# perm = [i // 2 + k * (i % 2) for i in range(2 * k)]  # Interleaved pattern
+# print(perm)
+# newAfterPerm = permute_systems(M, perm, [m] * k + [n] * k)
+# print(f"are they the same {np.allclose(ancientAfterPerm, newAfterPerm)}")
+# # * Verdict Yes
+# # * It is still pretty neat

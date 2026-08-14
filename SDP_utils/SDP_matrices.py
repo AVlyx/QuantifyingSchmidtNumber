@@ -1,8 +1,9 @@
 import math
 import numpy as np
-from SDP_utils.combinatorics import occupation_index, nu_set_iterator, multinomial, nu_iterator, dim_sym_kd, isotopyc_I_perm
+from SDP_utils.combinatorics import occupation_index, nu_set_iterator, multinomial, nu_iterator, dim_sym_kd
 from SDP_utils.isotopic_proj import isotypic_projector
 from scipy import sparse
+from toqito.perms import permute_systems
 
 
 def V_builder(k: int, d: int):
@@ -40,9 +41,8 @@ def isotypic_ot_I(m, n, k, lam):
     I = np.identity(n**k)
     M = np.kron(Pi_lambda, I)  # ordered A_1..A_k B_1..B_k
 
-    perm = np.asarray(isotopyc_I_perm(m, n, k))
-    inv = np.argsort(perm)
-    return M[np.ix_(inv, inv)]  # now ordered A_1 B_1 ... A_k B_k
+    perm = [i // 2 + k * (i % 2) for i in range(2 * k)]  # Interleaved pattern
+    return permute_systems(M, perm, [m] * k + [n] * k)  # now ordered A_1 B_1 ... A_k B_k
 
 
 def alpha_dag_j_builder(k: int, d: int, j: int):
