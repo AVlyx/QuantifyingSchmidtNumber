@@ -1,0 +1,4 @@
+{"p":0.0,"separability":0,"minSchmidtNumber":2,"objective":0.03259247371565309,"Et_lower":0.033730200115388076,"objective_max":0.2855647133975912,"Et_upper":1.0}
+{"p":0.05,"separability":0,"minSchmidtNumber":2,"objective":0.007467534695952755,"Et_lower":0.007524147491295263,"objective_max":0.2987880486024727,"Et_upper":1.0}
+{"p":0.1,"separability":0,"minSchmidtNumber":2,"objective":0.0010466374303101241,"Et_lower":0.0010477351793161116,"objective_max":0.30438085729254855,"Et_upper":1.0}
+{"p":0.15,"separability":1,"minSchmidtNumber":1,"objective":-3.857808055708345e-8,"Et_lower":0.0,"objective_max":1.0,"Et_upper":1.0}

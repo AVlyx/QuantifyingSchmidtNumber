@@ -11,8 +11,10 @@ def E_t_upperk2r2(P_lambda: float):
         return 1
     return (1 - math.sqrt(1 - 4 * P_lambda)) / 2
 
+
 ##########################################
 from math import factorial
+
 
 def f_lambda(lambda_: list[int]) -> int:
     """Number of standard Young tableaux of shape lambda_, via the hook length formula."""
@@ -28,14 +30,15 @@ def f_lambda(lambda_: list[int]) -> int:
     hook_product = 1
     for i in range(rows):
         for j in range(lam[i]):
-            arm = lam[i] - j - 1          # cells to the right in same row
-            leg = cols[j] - i - 1         # cells below in same column
-            hook_product *= (arm + leg + 1)
+            arm = lam[i] - j - 1  # cells to the right in same row
+            leg = cols[j] - i - 1  # cells below in same column
+            hook_product *= arm + leg + 1
 
     return factorial(n) // hook_product
 
 
 from itertools import permutations
+
 
 def kostka_lambda_nu(lam: list[int], nu: list[int]) -> int:
     n = sum(lam)
@@ -84,7 +87,9 @@ def kostka_lambda_nu(lam: list[int], nu: list[int]) -> int:
 
     return count
 
+
 from itertools import permutations
+
 
 def m_nu(nu: list[int], a_i: list[float]) -> float:
     n_vars = len(a_i)
@@ -101,10 +106,11 @@ def m_nu(nu: list[int], a_i: list[float]) -> float:
     for exp_perm in set(permutations(exponents)):  # dedupe identical arrangements
         term = 1.0
         for a, e in zip(a_i, exp_perm):
-            term *= a ** e
+            term *= a**e
         total += term
 
     return total
+
 
 def integer_partitions(k: int):
     """Yield all partitions of k as lists in weakly decreasing order."""
@@ -136,8 +142,10 @@ def expected_norm(lam: list[int], a_is: list[float]) -> float:
 
     return f_lambda(lam) * total
 
+
 import numpy as np
 from scipy.optimize import brentq
+
 
 def roots_r_2(lam: list[int], P_lam: float, num_samples: int = 500, tol: float = 1e-12):
     """Find all x in [0.5, 1] such that expected_norm(lam, [x, 1-x]) - P_lam == 0."""
@@ -163,10 +171,10 @@ def roots_r_2(lam: list[int], P_lam: float, num_samples: int = 500, tol: float =
 
         if (g0 < 0) != (g1 < 0):  # sign change -> refine with brentq
             root = brentq(g, x0, x1, xtol=tol)
-            roots.append(1 - root) # type: ignore
+            roots.append(1 - root)  # type: ignore
 
     return sorted(roots)
 
 
-def E_t_lower_lambda_r2(lam: list[int], P_lam:float):
-   return roots_r_2(lam, P_lam)[0]
+def E_t_lower_lambda_r2(lam: list[int], P_lam: float) -> float:
+    return roots_r_2(lam, P_lam)[0]
