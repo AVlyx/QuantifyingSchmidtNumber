@@ -177,4 +177,6 @@ def roots_r_2(lam: list[int], P_lam: float, num_samples: int = 500, tol: float =
 
 
 def E_t_lower_lambda_r2(lam: list[int], P_lam: float) -> float:
+    if P_lam >= 0.25:
+        return 1 / 2
     return roots_r_2(lam, P_lam)[0]
