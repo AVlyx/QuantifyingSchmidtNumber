@@ -1,6 +1,10 @@
 import math
 
 
+def max_Et(r: int, t: int):
+    return 1 - (1 / r) * t
+
+
 def E_t_lowerk2(r: int, t: int, P_lambda: float):
     etn = t + math.sqrt(t * (r - t) * (r - 2 * r * P_lambda - 1))
     return 1 - etn / r
@@ -94,12 +98,10 @@ from itertools import permutations
 def m_nu(nu: list[int], a_i: list[float]) -> float:
     n_vars = len(a_i)
 
-    # drop zero parts (they don't affect the partition) and check it fits
     parts = [p for p in nu if p != 0]
     if len(parts) > n_vars:
-        return 0.0  # not enough variables to support this many nonzero parts
+        return 0.0
 
-    # pad with zeros to match number of variables
     exponents = parts + [0] * (n_vars - len(parts))
 
     total = 0.0
@@ -147,36 +149,54 @@ import numpy as np
 from scipy.optimize import brentq
 
 
-def roots_r_2(lam: list[int], P_lam: float, num_samples: int = 500, tol: float = 1e-12):
-    """Find all x in [0.5, 1] such that expected_norm(lam, [x, 1-x]) - P_lam == 0."""
+def E_t_lower_lambda_r2(lam: list[int], P_lam: float) -> float:
+    # for all projectors if SN == 2
+    if P_lam >= 0.25:
+        return 1 / 2
 
     def g(x):
         return expected_norm(lam, [x, 1 - x]) - P_lam
 
-    xs = np.linspace(0.5, 1.0, num_samples + 1)
-    gs = [g(x) for x in xs]
+    try:
+        root: float = brentq(g, 1 / 2, 1, xtol=1e-10)  # type: ignore
+    except ValueError:
+        root: float = 1 / 2
 
-    roots = []
-
-    for i, gv in enumerate(gs):
-        if gv == 0.0:
-            roots.append(1 - xs[i])
-
-    for i in range(len(xs) - 1):
-        x0, x1 = xs[i], xs[i + 1]
-        g0, g1 = gs[i], gs[i + 1]
-
-        if g0 == 0.0 or g1 == 0.0:
-            continue  # already captured above
-
-        if (g0 < 0) != (g1 < 0):  # sign change -> refine with brentq
-            root = brentq(g, x0, x1, xtol=tol)
-            roots.append(1 - root)  # type: ignore
-
-    return sorted(roots)
-
-
-def E_t_lower_lambda_r2(lam: list[int], P_lam: float) -> float:
-    if P_lam >= 0.25:
+    if not root:
         return 1 / 2
-    return roots_r_2(lam, P_lam)[0]
+    return 1 - root
+
+
+def E_t_lower_antisym(lam: list[int], P_lam: float, t: int, r: int):
+    # all SN for antisym proj
+    """r is the number of variables (the expected SN)"""
+    assert all([li == 1 for li in lam])
+    assert t < r
+    k = len(lam)
+    assert k <= r
+
+    def ek(x: float):
+        res: float = 0.0
+        for i in range(k + 1):
+            res += math.comb(t, i) * math.comb(r - t, k - i) * (x / t) ** i * ((1 - x) / (r - t)) ** (k - i)
+        return res - P_lam
+
+    try:
+        root = brentq(ek, 1 / r * t, 1, xtol=1e-10)
+    except ValueError:
+        return max_Et(r, t)
+    if not root:
+        return max_Et(r, t)
+    return 1 - root  # type: ignore
+
+
+# print(E_t_lower_lambda_r2([2, 1], 0.0012))
+
+
+def Et_lower(lam: list[int], P_lam: float, r: int) -> list[float]:
+    if len(lam) == 2:
+        return [E_t_lower_lambda_r2(lam, P_lam)]
+    elif all([li == 1 for li in lam]):
+        return [E_t_lower_antisym(lam, P_lam, t, r) for t in range(1, r)]
+    else:
+        raise ValueError("Robustness calculation not supported for this lambda")

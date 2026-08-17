@@ -21,15 +21,18 @@ def plot_robustness(
 
     plt.figure(figsize=(7, 5))
     plt.plot(x_axis, Et_lower_axis, color="gray", linestyle="-", alpha=0.6, zorder=1, label="$E_t^{lower}$")
-    mask = separability_ax == Separability.entangled.value
-    plt.scatter(x_axis[mask], Et_lower_axis[mask], color="crimson", marker="o", s=50, label="entangled", zorder=2)
-    mask = separability_ax == Separability.inconclusive.value
-    plt.scatter(x_axis[mask], Et_lower_axis[mask], color="orange", marker="h", s=60, label="inconclusive", zorder=2)
-    mask = separability_ax == Separability.separable.value
-    plt.scatter(x_axis[mask], Et_lower_axis[mask], color="royalblue", marker="x", s=60, label="separable", zorder=2)
+
+    for i in range(Et_lower_axis.shape[1]):
+        mask = separability_ax == Separability.entangled.value
+        plt.scatter(x_axis[mask], Et_lower_axis[mask, i], color="crimson", marker="o", s=50, label="entangled", zorder=2)
+        mask = separability_ax == Separability.inconclusive.value
+        plt.scatter(x_axis[mask], Et_lower_axis[mask, i], color="orange", marker="h", s=60, label="inconclusive", zorder=2)
+        mask = separability_ax == Separability.separable.value
+        plt.scatter(x_axis[mask], Et_lower_axis[mask, i], color="royalblue", marker="x", s=60, label="separable", zorder=2)
 
     if plot_upper:
-        plt.plot(x_axis, Et_upper_axis, color="green", linestyle="-", alpha=0.6, zorder=1, label="$E_t^{lower}$")
+        for i in range(Et_upper_axis.shape[1]):
+            plt.plot(x_axis, Et_upper_axis[:, i], color="green", linestyle="-", alpha=0.6, zorder=1, label="$E_t^{lower}$")
 
     plt.yscale("log")
     plt.xlabel(xlabel)

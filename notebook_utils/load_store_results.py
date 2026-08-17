@@ -20,9 +20,9 @@ class SdpResult(BaseModel):
     separability: Separability
     minSchmidtNumber: int
     objective: float
-    Et_lower: float
+    Et_lower: list[float]
     objective_max: Optional[float]
-    Et_upper: Optional[float]
+    Et_upper: list[Optional[float]]
 
     def dump_to_jsonl(self, filename: str) -> None:
         if not os.path.exists(filename):
@@ -55,9 +55,9 @@ def save_result(
     separability: Separability,
     minSchmidtNumber: int,
     objective: float,
-    Et_lower: float,
+    Et_lower: list[float],
     objective_max: Optional[float] = None,
-    Et_upper: Optional[float] = None,
+    Et_upper: list[Optional[float]] = [None],
 ):
     """Append to {filename} in folder sdp_results (if it already exists)"""
     res = SdpResult(
@@ -66,7 +66,7 @@ def save_result(
         objective=objective,
         Et_lower=Et_lower,
         objective_max=_dump_num(objective_max),
-        Et_upper=_dump_num(Et_upper),
+        Et_upper=[_dump_num(et) for et in Et_upper],
         minSchmidtNumber=minSchmidtNumber,
     )
     res.dump_to_jsonl(f"sdp_results/{filename}")
