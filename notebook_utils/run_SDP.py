@@ -16,7 +16,7 @@ def run_sdp_on_range(
     range_: tuple[float, float, float],
     k_sym_depth=2,
     compute_upper=False,
-    real=True,
+    real=False,
     tol=10 ** (-7),
     solver: Literal["qics"] | Literal["mosek"] = "qics",
     early_stop=False,  # stop at the first zero
