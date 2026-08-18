@@ -2,3 +2,4 @@ numpy
 qics
 bound-entangled
 pydantic
+tqdm
