@@ -23,7 +23,7 @@ def run_sdp_on_range(
 ):
     SN_tested_for = len(lam)
     already_computed_results: list[SdpResult] = load_results_in_range(filename, range_)
-    if early_stop and already_computed_results and sorted(already_computed_results)[-1].Et_lower == 0:
+    if early_stop and already_computed_results and sorted(already_computed_results)[-1].objective < tol:
         "already computed with early stop"
         return
     already_computed_points = [result.p for result in already_computed_results]
