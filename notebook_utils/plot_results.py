@@ -1,18 +1,19 @@
 from matplotlib import pyplot as plt
 import numpy as np
 
-from notebook_utils.load_store_results import load_results_in_range, Separability
+from notebook_utils.load_store_results import load_results_in_range, load_all_results, Separability
 
 
 def plot_robustness(
     filename: str,
     title: str,
-    range_: tuple[float, float, float],
     xlabel: str,
+    *,
+    range_: tuple[float, float, float] | None = None,
     plot_upper: bool = False,
     zero_at=1e-8,  # log scale does not have a real 0
 ):
-    results = load_results_in_range(filename, range_)
+    results = load_results_in_range(filename, range_) if range_ else load_all_results(filename)
     x_axis = np.asarray([r.p for r in results], dtype=np.float64)
     Et_lower_axis = np.asarray([r.Et_lower if r.Et_lower else 0.0 for r in results], dtype=np.float64)
     Et_lower_axis = np.where(Et_lower_axis <= 0, zero_at, Et_lower_axis)
@@ -46,10 +47,11 @@ def plot_robustness(
 def plot_schmidt_number(
     filename: str,
     title: str,
-    range_: tuple[float, float, float],
+    *,
+    range_: tuple[float, float, float] | None = None,
     xlabel: str,
 ):
-    results = load_results_in_range(filename, range_)
+    results = load_results_in_range(filename, range_) if range_ else load_all_results(filename)
     x_axis = np.asarray([r.p for r in results], dtype=np.float64)
     sn_axis = np.asarray([r.minSchmidtNumber for r in results], dtype=np.int32)
     separability_ax = np.asarray([r.separability.value for r in results], dtype=np.int32)

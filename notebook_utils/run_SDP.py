@@ -1,4 +1,4 @@
-from notebook_utils.load_store_results import load_results_in_range, SdpResult, Separability, save_result
+from notebook_utils.load_store_results import load_results_in_range, load_all_results, SdpResult, Separability, save_result
 from notebook_utils.range_and_canonical import range_canonical
 from tqdm import tqdm
 from toqito.state_props import is_separable
@@ -6,6 +6,7 @@ from typing import Callable, Literal
 import numpy as np
 from SDP_utils.sdp import SDP, SDP_max
 from SDP_utils.E_t import Et_lower, E_t_upperk2r2, max_Et
+from itertools import pairwise
 
 
 def run_sdp_on_range(
@@ -14,6 +15,7 @@ def run_sdp_on_range(
     lam: list[int],
     generator: Callable[[float], np.ndarray],
     range_: tuple[float, float, float],
+    *,
     k_sym_depth=2,
     compute_upper=False,
     real=False,
@@ -34,16 +36,7 @@ def run_sdp_on_range(
 
     for p in tqdm(left_to_compute):
         state = generator(p)
-
-        # * Toqito check for separability
-        sep, msg = is_separable(state, dim=[*dims], level=k_sym_depth)
-        if sep:
-            separability = Separability.separable
-        elif msg.startswith("inconclusive"):
-            separability = Separability.inconclusive
-        else:
-            separability = Separability.entangled
-
+        separability = check_separability(dims, k_sym_depth, state)
         # * Early continue if separable
         if separability == Separability.separable:
             save_result(
@@ -89,3 +82,66 @@ def run_sdp_on_range(
             E1_upper = None
 
         save_result(filename, p, separability, SN_tested_for, obj_min, Et_lower(lam, obj_min, SN_tested_for), obj_max, [E1_upper])
+
+
+def check_separability(dims: tuple[int, int], k_sym_depth: int, state: np.ndarray) -> Separability:
+    # * Toqito check for separability
+    sep, msg = is_separable(state, dim=[*dims], level=k_sym_depth)
+    if sep:
+        return Separability.separable
+    elif msg.startswith("inconclusive"):
+        return Separability.inconclusive
+    else:
+        return Separability.entangled
+
+
+def find_bin_search_low_high(results: list[SdpResult], low_high: tuple[float, float], decreasing: bool) -> tuple[float, float]:
+    if not results:
+        return low_high
+    low, high = low_high
+    res_p_sep: list[tuple[float, bool]] = [(low, decreasing)] + [(r.p, r.Et_lower[0] == 0.0) for r in results] + [(high, not decreasing)]
+    results.sort()
+    return next(
+        ((low_w, high_w) for (low_w, low_w_sep_bool), (high_w, high_w_sep_bool) in pairwise(res_p_sep) if (low_w_sep_bool != high_w_sep_bool)),
+        low_high,
+    )
+
+
+def bin_search_sdp_vertex(
+    filename: str,
+    dims: tuple[int, int],
+    lam: list[int],
+    generator: Callable[[float], np.ndarray],
+    low_high: tuple[float, float],
+    precision: int,
+    *,
+    k_sym_depth=2,
+    tol=10 ** (-7),
+    solver: Literal["qics"] | Literal["mosek"] = "qics",
+    real=False,
+    decreasing=False,
+):
+    """Find the point where the SN goes from undetected to detected. Assuming continuous and increasing.
+    low_high are the lower bound and upper bound of the search
+    precision is the number of windows uptates to the bounds"""
+
+    SN_tested_for = len(lam)
+    already_computed_results: list[SdpResult] = load_all_results(filename)
+    low, high = find_bin_search_low_high(already_computed_results, low_high, decreasing)
+    computed = len(already_computed_results)
+
+    for _ in tqdm(range(computed, precision)):
+        p = (low + high) / 2
+        state = generator(p)
+        separability = check_separability(dims, k_sym_depth, state)
+        if separability == Separability.separable:
+            save_result(filename, p, separability, 1, 0, [0] * (SN_tested_for - 1), None, [None])
+            low, high = (low, p) if decreasing else (p, high)
+            continue
+        obj_min, _ = SDP(lam, state, dims, solver=solver, real=real)
+        if obj_min - tol <= 0:
+            save_result(filename, p, separability, 1, obj_min, [0] * (SN_tested_for - 1), None, [None])
+            low, high = (low, p) if decreasing else (p, high)
+        else:
+            low, high = (p, high) if decreasing else (low, p)
+            save_result(filename, p, separability, SN_tested_for, obj_min, Et_lower(lam, obj_min, SN_tested_for), None, [None])

@@ -1,0 +1,14 @@
+{"p":0.125,"separability":0,"minSchmidtNumber":2,"objective":0.00532203004108602,"Et_lower":[0.005350659599280827],"objective_max":null,"Et_upper":[null]}
+{"p":0.1875,"separability":0,"minSchmidtNumber":2,"objective":0.000125529006456264,"Et_lower":[0.00012554476794457425],"objective_max":null,"Et_upper":[null]}
+{"p":0.1953125,"separability":0,"minSchmidtNumber":2,"objective":0.000017341053498903802,"Et_lower":[0.000017341354221489524],"objective_max":null,"Et_upper":[null]}
+{"p":0.19921875,"separability":0,"minSchmidtNumber":2,"objective":4.776562918754751e-7,"Et_lower":[4.776567481545868e-7],"objective_max":null,"Et_upper":[null]}
+{"p":0.1994628906,"separability":0,"minSchmidtNumber":2,"objective":2.2693008386049512e-7,"Et_lower":[2.2693018686403832e-7],"objective_max":null,"Et_upper":[null]}
+{"p":0.1995849609,"separability":0,"minSchmidtNumber":2,"objective":1.3575596808897486e-7,"Et_lower":[1.357560049930484e-7],"objective_max":null,"Et_upper":[null]}
+{"p":0.1996459961,"separability":0,"minSchmidtNumber":1,"objective":9.793884185810633e-8,"Et_lower":[0.0],"objective_max":null,"Et_upper":[null]}
+{"p":0.1997070312,"separability":0,"minSchmidtNumber":1,"objective":6.476705403327815e-8,"Et_lower":[0.0],"objective_max":null,"Et_upper":[null]}
+{"p":0.2001953125,"separability":1,"minSchmidtNumber":1,"objective":-5.448022501273325e-8,"Et_lower":[0.0],"objective_max":null,"Et_upper":[null]}
+{"p":0.201171875,"separability":1,"minSchmidtNumber":1,"objective":-4.5165283174899984e-8,"Et_lower":[0.0],"objective_max":null,"Et_upper":[null]}
+{"p":0.203125,"separability":1,"minSchmidtNumber":1,"objective":-2.8937079549380684e-8,"Et_lower":[0.0],"objective_max":null,"Et_upper":[null]}
+{"p":0.21875,"separability":1,"minSchmidtNumber":1,"objective":-1.4263610593860665e-8,"Et_lower":[0.0],"objective_max":null,"Et_upper":[null]}
+{"p":0.25,"separability":1,"minSchmidtNumber":1,"objective":-1.6235373398541114e-8,"Et_lower":[0.0],"objective_max":null,"Et_upper":[null]}
+{"p":0.5,"separability":2,"minSchmidtNumber":1,"objective":0.0,"Et_lower":[0.0],"objective_max":null,"Et_upper":[null]}

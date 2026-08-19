@@ -80,15 +80,16 @@ def _dump_num(x):
     return None if np.isnan(x) else x
 
 
-def load_results_in_range(filename: str, range_: tuple[float, float, float]) -> list[SdpResult]:
+def load_all_results(filename: str) -> list[SdpResult]:
     if not filename.startswith("sdp_results") or filename.startswith("./sdp_results"):
         filename = f"sdp_results/{filename}"
-
     if not os.path.exists(filename):
         return []
+    return SdpResult.load_jsonl(filename)
 
-    results = SdpResult.load_jsonl(filename)
+
+def load_results_in_range(filename: str, range_: tuple[float, float, float]) -> list[SdpResult]:
+    results = load_all_results(filename)
     range_can = range_canonical(range_)
-
     res = [r for r in results if canonical_key(r.p) in range_can]
     return sorted(res)
