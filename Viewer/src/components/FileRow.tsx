@@ -1,3 +1,4 @@
+import { componentCount } from '../lib/parseJsonl.ts';
 import type { DataFile } from '../types.ts';
 
 interface Props {
@@ -7,6 +8,8 @@ interface Props {
 }
 
 export function FileRow({ file, onPatch, onRemove }: Props) {
+  // A sweep testing Schmidt number r carries r - 1 bounds and so draws r - 1 curves.
+  const components = componentCount(file.records);
   if (file.error) {
     return (
       <li className="file-row file-row--error">
@@ -52,6 +55,7 @@ export function FileRow({ file, onPatch, onRemove }: Props) {
       </div>
       <div className="file-row__sub">
         {file.fileName} · {file.records.length} points
+        {components > 1 && ` · E_t for t = 1…${components}`}
       </div>
     </li>
   );

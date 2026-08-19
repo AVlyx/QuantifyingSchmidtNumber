@@ -51,7 +51,7 @@ export default function App() {
   const hasPlottable = files.some((f) => f.visible && !f.error && f.records.length > 0);
   // Listed whenever markers are on screen — with the separable filter on, the plot still
   // mixes entangled and inconclusive points, which is exactly when the key is needed.
-  const showSymbolKey = settings.chartMode === 'line' && figure.verdicts.length > 0;
+  const showSymbolKey = settings.chartMode !== 'histogram' && figure.verdicts.length > 0;
 
   return (
     <div className="app">
@@ -82,7 +82,7 @@ export default function App() {
                     {VERDICT_LABEL[verdict]}
                   </span>
                 ))}
-                {settings.showUpperBound && (
+                {settings.showUpperBound && settings.chartMode === 'line' && (
                   <span className="symbol-key__item">
                     <svg viewBox="0 0 26 14" width="26" height="13" aria-hidden>
                       <path

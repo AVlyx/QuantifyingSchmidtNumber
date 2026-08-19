@@ -2,7 +2,9 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import type { Action, AppState } from '../types.ts';
 import { DEFAULT_SETTINGS } from '../types.ts';
 
-export const STORAGE_KEY = 'sdp-viewer-v1';
+// v2: the record schema changed with `Et_lower`/`Et_upper`, so a v1 payload holds records
+// this build cannot plot. Bumping the key drops it rather than restoring a blank plot.
+export const STORAGE_KEY = 'sdp-viewer-v2';
 
 const EMPTY: AppState = { files: [], settings: DEFAULT_SETTINGS };
 

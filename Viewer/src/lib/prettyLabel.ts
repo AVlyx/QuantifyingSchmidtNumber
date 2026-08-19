@@ -1,14 +1,16 @@
 /**
- * Default legend name for a result file, mirroring `_pretty_label` in the notebooks:
- * strip the extension, a trailing `_2d`, and a trailing `_m<d>_k<d>`, then
- * turn `_`/`-` into spaces.
+ * Default legend name for a result file: drop the extension, turn `_`/`-` into spaces and
+ * spell a `_lam<digits>` suffix as the partition it encodes.
  *
- *   C3C3_horodecki_m3_k2.jsonl -> "C3C3 horodecki"
+ *   c3c3_Horodecki.jsonl              -> "c3c3 Horodecki"
+ *   convex_Chessboard_Tiles_lam21.jsonl -> "convex Chessboard Tiles λ=(2,1)"
  */
 export function prettyLabel(fileName: string): string {
-  const stem = fileName
-    .replace(/\.(jsonl|json)$/i, '')
-    .replace(/_2d$/i, '')
-    .replace(/_m\d+_k\d+$/i, '');
-  return stem.replace(/[_-]+/g, ' ').trim() || fileName;
+  const stem = fileName.replace(/\.(jsonl|json)$/i, '');
+
+  const lam = /_lam(\d+)$/i.exec(stem);
+  const base = (lam ? stem.slice(0, lam.index) : stem).replace(/[_-]+/g, ' ').trim();
+  const suffix = lam ? ` λ=(${lam[1].split('').join(',')})` : '';
+
+  return (base + suffix).trim() || fileName;
 }

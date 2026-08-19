@@ -7,17 +7,42 @@ export const VERDICT_LABEL: Record<Verdict, string> = {
   2: 'separable',
 };
 
-/** One line of a 1-D `*.jsonl` sweep in `sdp_results/`. */
+/**
+ * One line of a `*.jsonl` sweep in `sdp_results/`, matching `SdpResult` in
+ * `notebook_utils/load_store_results.py` field for field.
+ */
 export interface Record1D {
-  /** Sweep parameter, in [0, 1]. Does not always start at 0. */
+  /** Sweep parameter. Does not always start at 0, and often stops well short of 1. */
   p: number;
-  obj: number | null;
-  separable: Verdict;
-  /** Lower bound on E_t — the plotted quantity. 0 means "not certified entangled". */
-  Etl: number | null;
-  obj_max: number | null;
-  /** Upper bound on E_t (k = 2 only). 1.0 for nearly every point in the current data. */
-  Etu: number | null;
+  separability: Verdict;
+  /** Schmidt number certified at this point — 1 when the SDP did not certify entanglement. */
+  minSchmidtNumber: number | null;
+  objective: number | null;
+  /**
+   * Lower bounds on E_t — the plotted quantity. One entry per t, index i holding t = i + 1,
+   * so a sweep testing Schmidt number r carries r - 1 of them. 0 means "not certified".
+   */
+  Et_lower: (number | null)[];
+  objective_max: number | null;
+  /** Upper bounds on E_t, indexed like `Et_lower`. Only ever computed for k = 2. */
+  Et_upper: (number | null)[];
+}
+
+export type ChartMode = 'line' | 'histogram' | 'schmidt';
+
+export interface Settings {
+  chartMode: ChartMode;
+  showUpperBound: boolean;
+  /** When false, records with `separability === 2` are filtered out of the plot. */
+  showSeparable: boolean;
+  /** Substituted for any value <= 0 so it can be drawn on the log axis (the notebook's `zero_at`). */
+  zeroFloor: number;
+  /** Raw text of the zero-floor input, so typing "1e-" does not destroy the value. */
+  zeroFloorText: string;
+  /** Start of the x axis; null fits the data. Sweeps span very different ranges of p. */
+  xMin: number | null;
+  /** End of the x axis; null fits the data. */
+  xMax: number | null;
 }
 
 export interface DataFile {
@@ -32,21 +57,6 @@ export interface DataFile {
   error?: string;
 }
 
-export type ChartMode = 'line' | 'histogram';
-
-export interface Settings {
-  chartMode: ChartMode;
-  showUpperBound: boolean;
-  /** When false, records with `separable !== 0` are filtered out of the plot. */
-  showSeparable: boolean;
-  /** Substituted for any value <= 0 so it can be drawn on the log axis (the notebook's `eps`). */
-  zeroFloor: number;
-  /** Raw text of the zero-floor input, so typing "1e-" does not destroy the value. */
-  zeroFloorText: string;
-  /** Start of the x axis. The end is always 1. */
-  xMin: number;
-}
-
 export interface AppState {
   files: DataFile[];
   settings: Settings;
@@ -58,7 +68,8 @@ export const DEFAULT_SETTINGS: Settings = {
   showSeparable: true,
   zeroFloor: 1e-6,
   zeroFloorText: '1e-6',
-  xMin: 0,
+  xMin: null,
+  xMax: null,
 };
 
 export type Action =

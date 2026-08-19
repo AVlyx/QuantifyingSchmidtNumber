@@ -7,9 +7,17 @@ export interface ParseResult {
 
 /** `null` on disk is the encoding of NaN; anything non-finite collapses back to null. */
 function num(value: unknown): number | null {
-  if (value === null || value === undefined) return null;
   if (typeof value !== 'number' || !Number.isFinite(value)) return null;
   return value;
+}
+
+/**
+ * `Et_lower` / `Et_upper` are lists, one entry per t. A bare number is accepted as a
+ * one-element list so a hand-edited file still loads.
+ */
+function numList(value: unknown): (number | null)[] {
+  if (Array.isArray(value)) return value.map(num);
+  return [num(value)];
 }
 
 function verdict(value: unknown): Verdict {
@@ -17,12 +25,12 @@ function verdict(value: unknown): Verdict {
 }
 
 /**
- * Parse a 1-D sweep file from `sdp_results/`.
+ * Parse a sweep file from `sdp_results/`.
  *
- * Accepts JSONL (one record per line) or a `.json` array of the same records.
- * Rejects the 2-D schema (`{x, y, obj, separable, Etl}`) outright — it is out of scope.
- * Records come back sorted ascending by `p`; the notebooks sort defensively too, since
- * the sweep is not necessarily stored in ascending order.
+ * Accepts JSONL (one record per line) or a `.json` array of the same records. The schema
+ * is `SdpResult` from `notebook_utils/load_store_results.py`; the pre-`Et_lower` schema
+ * (`obj`/`separable`/`Etl`/`Etu`) and the 2-D `{x, y}` schema are both rejected by name.
+ * Records come back sorted ascending by `p`, as the notebook sorts them too.
  */
 export function parseResultFile(text: string): ParseResult {
   let raw: unknown[];
@@ -66,20 +74,36 @@ export function parseResultFile(text: string): ParseResult {
     if (typeof rec.p !== 'number' || !Number.isFinite(rec.p)) {
       return { records: [], error: `Record ${i + 1} has no numeric "p" field.` };
     }
-    if (!('Etl' in rec)) {
-      return { records: [], error: `Record ${i + 1} has no "Etl" field.` };
+    if (!('Et_lower' in rec)) {
+      const stale = 'Etl' in rec || 'Etu' in rec || 'separable' in rec;
+      return {
+        records: [],
+        error: stale
+          ? 'Old result schema (Etl/Etu) — rerun the sweep to get Et_lower/Et_upper.'
+          : `Record ${i + 1} has no "Et_lower" field.`,
+      };
     }
 
     records.push({
       p: rec.p,
-      obj: num(rec.obj),
-      separable: verdict(rec.separable),
-      Etl: num(rec.Etl),
-      obj_max: num(rec.obj_max),
-      Etu: num(rec.Etu),
+      separability: verdict(rec.separability),
+      minSchmidtNumber: num(rec.minSchmidtNumber),
+      objective: num(rec.objective),
+      Et_lower: numList(rec.Et_lower),
+      objective_max: num(rec.objective_max),
+      Et_upper: numList(rec.Et_upper),
     });
   }
 
   records.sort((a, b) => a.p - b.p);
   return { records };
+}
+
+/**
+ * How many t components a file carries — the length of its longest `Et_lower`. A sweep
+ * testing Schmidt number r has r - 1, so `c3c3_isotropicSN3` draws two curves and every
+ * k = 2 sweep draws one.
+ */
+export function componentCount(records: Record1D[]): number {
+  return records.reduce((n, r) => Math.max(n, r.Et_lower.length), 0);
 }
