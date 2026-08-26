@@ -167,7 +167,7 @@ def E_t_lower_lambda_r2(lam: list[int], P_lam: float) -> float:
     return 1 - root
 
 
-def E_t_lower_antisym(lam: list[int], P_lam: float, t: int, r: int):
+def E_t_upper_antisym(lam: list[int], P_lam: float, t: int, r: int):
     # all SN for antisym proj
     """r is the number of variables (the expected SN)"""
     assert all([li == 1 for li in lam])
@@ -179,6 +179,27 @@ def E_t_lower_antisym(lam: list[int], P_lam: float, t: int, r: int):
         res: float = 0.0
         for i in range(k + 1):
             res += math.comb(t, i) * math.comb(r - t, k - i) * (x / t) ** i * ((1 - x) / (r - t)) ** (k - i)
+        return res - P_lam
+
+    try:
+        root = brentq(ek, 1 / r * t, 1, xtol=1e-10)
+    except ValueError:
+        return max_Et(r, t)
+    if not root:
+        return max_Et(r, t)
+    return 1 - root  # type: ignore
+
+
+def E_t_lower_antisym(lam: list[int], P_lam: float, t: int, r: int):
+    # all SN for antisym proj
+    """r is the number of variables (the expected SN)"""
+    assert all([li == 1 for li in lam])
+    assert t < r
+    k = len(lam)
+    assert k <= r
+
+    def ek(x: float):
+        res = math.comb(r - 1, k) * (((1 - x) / (r - 1)) ** (k - 1)) * (((k * x) / (r - k)) + ((1 - x) / (r - 1)))
         return res - P_lam
 
     try:
