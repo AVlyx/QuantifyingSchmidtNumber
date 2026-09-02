@@ -16,6 +16,7 @@ def run_sdp_on_range(
     generator: Callable[[float], np.ndarray],
     range_: tuple[float, float, float],
     *,
+    folder: str,
     k_sym_depth=2,
     compute_upper=False,
     real=False,
@@ -24,7 +25,7 @@ def run_sdp_on_range(
     early_stop=False,  # stop at the first zero
 ):
     SN_tested_for = len(lam)
-    already_computed_results: list[SdpResult] = load_results_in_range(filename, range_)
+    already_computed_results: list[SdpResult] = load_results_in_range(folder, filename, range_)
     if early_stop and already_computed_results and sorted(already_computed_results)[-1].objective < tol:
         "already computed with early stop"
         return
@@ -40,6 +41,7 @@ def run_sdp_on_range(
         # * Early continue if separable
         if separability == Separability.separable:
             save_result(
+                folder,
                 filename,
                 p,
                 separability,
@@ -57,6 +59,7 @@ def run_sdp_on_range(
         obj_min, _ = SDP(lam, state, dims, solver=solver, real=real)
         if obj_min - tol <= 0:
             save_result(
+                folder,
                 filename,
                 p,
                 separability,
@@ -81,7 +84,7 @@ def run_sdp_on_range(
             obj_max = None
             E1_upper = None
 
-        save_result(filename, p, separability, SN_tested_for, obj_min, Et_lower(lam, obj_min, SN_tested_for), obj_max, [E1_upper])
+        save_result(folder, filename, p, separability, SN_tested_for, obj_min, Et_lower(lam, obj_min, SN_tested_for), obj_max, [E1_upper])
 
 
 def check_separability(dims: tuple[int, int], k_sym_depth: int, state: np.ndarray) -> Separability:
@@ -115,6 +118,7 @@ def bin_search_sdp_vertex(
     low_high: tuple[float, float],
     precision: int,
     *,
+    folder: str,
     k_sym_depth=2,
     tol=10 ** (-7),
     solver: Literal["qics"] | Literal["mosek"] = "qics",
@@ -126,7 +130,7 @@ def bin_search_sdp_vertex(
     precision is the number of windows uptates to the bounds"""
 
     SN_tested_for = len(lam)
-    already_computed_results: list[SdpResult] = load_all_results(filename)
+    already_computed_results: list[SdpResult] = load_all_results(folder, filename)
     low, high = find_bin_search_low_high(already_computed_results, low_high, decreasing)
     computed = len(already_computed_results)
 
@@ -135,13 +139,13 @@ def bin_search_sdp_vertex(
         state = generator(p)
         separability = check_separability(dims, k_sym_depth, state)
         if separability == Separability.separable:
-            save_result(filename, p, separability, 1, 0, [0] * (SN_tested_for - 1), None, [None])
+            save_result(folder, filename, p, separability, 1, 0, [0] * (SN_tested_for - 1), None, [None])
             low, high = (low, p) if decreasing else (p, high)
             continue
         obj_min, _ = SDP(lam, state, dims, solver=solver, real=real)
         if obj_min - tol <= 0:
-            save_result(filename, p, separability, 1, obj_min, [0] * (SN_tested_for - 1), None, [None])
+            save_result(folder, filename, p, separability, 1, obj_min, [0] * (SN_tested_for - 1), None, [None])
             low, high = (low, p) if decreasing else (p, high)
         else:
             low, high = (p, high) if decreasing else (low, p)
-            save_result(filename, p, separability, SN_tested_for, obj_min, Et_lower(lam, obj_min, SN_tested_for), None, [None])
+            save_result(folder, filename, p, separability, SN_tested_for, obj_min, Et_lower(lam, obj_min, SN_tested_for), None, [None])

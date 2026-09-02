@@ -25,6 +25,7 @@ class SdpResult(BaseModel):
     Et_upper: list[Optional[float]]
 
     def dump_to_jsonl(self, filename: str) -> None:
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         if not os.path.exists(filename):
             with open(filename, "a") as f:
                 f.write(self.model_dump_json() + "\n")
@@ -49,7 +50,29 @@ class SdpResult(BaseModel):
         return self.p < other.p
 
 
+RESULTS_ROOT = "sdp_results"
+
+#: Every sweep lives in one of these subfolders of `sdp_results/`.
+FOLDERS = ("vertex", "lam21", "convex", "noise", "SN3", "test", "Parametric")
+
+
+def result_path(folder: str, filename: str) -> str:
+    """Path of a sweep file: `sdp_results/{folder}/{filename}`.
+
+    `folder` names a subfolder of `sdp_results/`; see `FOLDERS`. A `filename` that already
+    carries the folder (or the `sdp_results/` prefix) is passed through unchanged, so a path
+    printed by one helper can be handed straight back to another.
+    """
+    filename = filename.replace("\\", "/").lstrip("./")
+    if filename.startswith(f"{RESULTS_ROOT}/"):
+        return filename
+    if folder and not filename.startswith(f"{folder}/"):
+        filename = f"{folder}/{filename}"
+    return f"{RESULTS_ROOT}/{filename}"
+
+
 def save_result(
+    folder: str,
     filename: str,
     p: float,
     separability: Separability,
@@ -59,7 +82,7 @@ def save_result(
     objective_max: Optional[float] = None,
     Et_upper: list[Optional[float]] = [None],
 ):
-    """Append to {filename} in folder sdp_results (if it already exists)"""
+    """Append to {filename} in folder sdp_results/{folder} (if it already exists)"""
     res = SdpResult(
         p=canonical_key(p),
         separability=separability,
@@ -69,7 +92,7 @@ def save_result(
         Et_upper=[_dump_num(et) for et in Et_upper],
         minSchmidtNumber=minSchmidtNumber,
     )
-    res.dump_to_jsonl(f"sdp_results/{filename}")
+    res.dump_to_jsonl(result_path(folder, filename))
 
 
 def _dump_num(x):
@@ -80,16 +103,15 @@ def _dump_num(x):
     return None if np.isnan(x) else x
 
 
-def load_all_results(filename: str) -> list[SdpResult]:
-    if not filename.startswith("sdp_results") or filename.startswith("./sdp_results"):
-        filename = f"sdp_results/{filename}"
-    if not os.path.exists(filename):
+def load_all_results(folder: str, filename: str) -> list[SdpResult]:
+    path = result_path(folder, filename)
+    if not os.path.exists(path):
         return []
-    return SdpResult.load_jsonl(filename)
+    return SdpResult.load_jsonl(path)
 
 
-def load_results_in_range(filename: str, range_: tuple[float, float, float]) -> list[SdpResult]:
-    results = load_all_results(filename)
+def load_results_in_range(folder: str, filename: str, range_: tuple[float, float, float]) -> list[SdpResult]:
+    results = load_all_results(folder, filename)
     range_can = range_canonical(range_)
     res = [r for r in results if canonical_key(r.p) in range_can]
     return sorted(res)

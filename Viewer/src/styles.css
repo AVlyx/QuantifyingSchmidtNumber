@@ -53,6 +53,83 @@ body {
   color: var(--ink-muted);
 }
 
+/* ---------- folders ---------- */
+
+.folder {
+  margin-top: 6px;
+}
+
+.folder__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+
+.folder__header:hover {
+  background: rgba(0, 0, 0, 0.045);
+}
+
+.folder__caret {
+  flex: 0 0 auto;
+  font-size: 10px;
+  color: var(--ink-muted);
+  transition: transform 0.12s;
+}
+
+.folder__caret--open {
+  transform: rotate(90deg);
+}
+
+.folder__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+
+.folder__count {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
+}
+
+.folder .file-list {
+  margin: 4px 0 10px;
+  padding-left: 16px;
+}
+
+/* ---------- add your own ---------- */
+
+.add-files {
+  margin-top: 20px;
+}
+
+.add-files summary {
+  font-size: 12px;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.add-files summary:hover {
+  color: var(--accent);
+}
+
+.add-files .dropzone {
+  margin-top: 8px;
+}
+
 /* ---------- dropzone ---------- */
 
 .dropzone {
@@ -242,6 +319,33 @@ code {
 .file-row--error {
   border-color: var(--danger);
   background: #fdf3f4;
+}
+
+/* Not picked yet: a single flat line, so a folder of a dozen sweeps stays scannable. */
+.file-row--idle {
+  padding: 3px 6px;
+  border-color: transparent;
+  background: transparent;
+}
+
+.file-row--idle:hover {
+  background: rgba(0, 0, 0, 0.035);
+}
+
+.file-row--idle .file-row__main {
+  cursor: pointer;
+}
+
+.file-row--idle .file-row__name {
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.file-row__size {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-muted);
 }
 
 .file-row__main {

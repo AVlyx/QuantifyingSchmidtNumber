@@ -26,7 +26,8 @@ export function DropZone({ onFiles }: { onFiles: (files: File[]) => void }) {
     >
       <strong>Drop result files</strong>
       <span>
-        <code>.jsonl</code> sweeps from <code>sdp_results/</code>, or click to browse
+        a <code>.jsonl</code> sweep not committed to <code>sdp_results/</code> yet, or click
+        to browse
       </span>
       <input
         ref={input}

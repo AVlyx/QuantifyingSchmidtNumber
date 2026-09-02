@@ -45,21 +45,36 @@ export interface Settings {
   xMax: number | null;
 }
 
+/** Sidebar group for files the user dropped in, which belong to no `sdp_results/` folder. */
+export const UPLOADS_FOLDER = 'Added by you';
+
 export interface DataFile {
+  /** The `sdp_results/` path for a catalog file, a uuid for an uploaded one. */
   id: string;
+  /** `catalog` files are fetched from the bundled `sdp_results/`; `upload` ones were dropped in. */
+  source: 'catalog' | 'upload';
+  /** Sidebar group: the `sdp_results/` folder, or `UPLOADS_FOLDER`. */
+  folder: string;
   fileName: string;
   /** Editable legend name. */
   label: string;
   color: string;
   visible: boolean;
-  /** Sorted ascending by `p`. Empty when `error` is set. */
+  /** Sorted ascending by `p`. Empty when `error` is set, or until `loaded`. */
   records: Record1D[];
   error?: string;
+  /**
+   * Whether `records` have been fetched. Catalog files persist without their records — they
+   * are re-fetched on load — so a restored entry starts `false` and hydrates on mount.
+   */
+  loaded: boolean;
 }
 
 export interface AppState {
   files: DataFile[];
   settings: Settings;
+  /** Folder names whose sidebar section is closed. */
+  collapsed: string[];
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -74,6 +89,7 @@ export const DEFAULT_SETTINGS: Settings = {
 
 export type Action =
   | { type: 'addFiles'; files: DataFile[] }
+  | { type: 'toggleFolder'; folder: string }
   | { type: 'removeFile'; id: string }
   | { type: 'updateFile'; id: string; patch: Partial<DataFile> }
   | { type: 'updateSettings'; patch: Partial<Settings> }

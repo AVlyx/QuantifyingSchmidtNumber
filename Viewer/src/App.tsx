@@ -1,12 +1,13 @@
-import { useCallback, useMemo, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { PlotView } from './components/PlotView.tsx';
 import { Sidebar } from './components/Sidebar.tsx';
 import { buildFigure } from './lib/buildTraces.ts';
+import { fetchCatalog, fetchResultFile, type Catalog, type CatalogFile } from './lib/catalog.ts';
 import { nextColor } from './lib/palette.ts';
 import { parseResultFile } from './lib/parseJsonl.ts';
 import { prettyLabel } from './lib/prettyLabel.ts';
 import { usePersistedState } from './lib/usePersistedState.ts';
-import { VERDICT_LABEL, type DataFile, type Verdict } from './types.ts';
+import { UPLOADS_FOLDER, VERDICT_LABEL, type DataFile, type Verdict } from './types.ts';
 
 /** Drawn rather than typed, one per `VERDICT_STYLE` entry: no unicode glyph matches the
  *  plotly symbols closely enough to be read as the same mark. */
@@ -20,9 +21,66 @@ const SYMBOL_KEY: Record<Verdict, ReactNode> = {
 
 export default function App() {
   const [state, dispatch, storageError] = usePersistedState();
-  const { files, settings } = state;
+  const { files, settings, collapsed } = state;
+
+  const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
 
   const figure = useMemo(() => buildFigure(files, settings), [files, settings]);
+
+  useEffect(() => {
+    let live = true;
+    fetchCatalog().then(
+      (c) => live && setCatalog(c),
+      (e: Error) =>
+        live && setCatalogError(`Could not load the sdp_results index — ${e.message}`),
+    );
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  // Catalog files are persisted without their records, so a restored session (and every
+  // newly ticked file) arrives here unloaded and gets fetched exactly once.
+  const fetching = useRef(new Set<string>());
+  useEffect(() => {
+    for (const file of files) {
+      if (file.source !== 'catalog' || file.loaded || file.error) continue;
+      if (fetching.current.has(file.id)) continue;
+      fetching.current.add(file.id);
+      fetchResultFile(file.id).then(({ records, error }) => {
+        fetching.current.delete(file.id);
+        dispatch({ type: 'updateFile', id: file.id, patch: { records, error, loaded: true } });
+      });
+    }
+  }, [files, dispatch]);
+
+  const handleToggleCatalogFile = useCallback(
+    (folder: string, entry: CatalogFile, on: boolean) => {
+      const existing = files.find((f) => f.id === entry.path);
+      if (existing) {
+        dispatch({ type: 'updateFile', id: existing.id, patch: { visible: on } });
+        return;
+      }
+      dispatch({
+        type: 'addFiles',
+        files: [
+          {
+            id: entry.path,
+            source: 'catalog',
+            folder,
+            fileName: entry.name,
+            label: prettyLabel(entry.name),
+            color: nextColor(files.map((f) => f.color)),
+            visible: on,
+            records: [],
+            loaded: false,
+          },
+        ],
+      });
+    },
+    [files, dispatch],
+  );
 
   const handleFiles = useCallback(
     async (incoming: File[]) => {
@@ -34,12 +92,15 @@ export default function App() {
         const color = nextColor([...used, ...added.map((f) => f.color)]);
         added.push({
           id: crypto.randomUUID(),
+          source: 'upload',
+          folder: UPLOADS_FOLDER,
           fileName: file.name,
           label: prettyLabel(file.name),
           color,
           visible: true,
           records,
           error,
+          loaded: true,
         });
       }
 
@@ -56,13 +117,18 @@ export default function App() {
   return (
     <div className="app">
       <Sidebar
+        catalog={catalog}
+        catalogError={catalogError}
         files={files}
+        collapsed={collapsed}
         settings={settings}
         storageError={storageError}
         emptyAfterFilter={figure.emptyAfterFilter}
+        onToggleFile={handleToggleCatalogFile}
         onFiles={handleFiles}
         onPatchFile={(id, patch) => dispatch({ type: 'updateFile', id, patch })}
         onRemoveFile={(id) => dispatch({ type: 'removeFile', id })}
+        onToggleFolder={(folder) => dispatch({ type: 'toggleFolder', folder })}
         onPatchSettings={(patch) => dispatch({ type: 'updateSettings', patch })}
         onClearAll={() => dispatch({ type: 'clearAll' })}
       />
@@ -102,9 +168,12 @@ export default function App() {
         ) : (
           <div className="empty-state">
             <p>
-              Drop <code>.jsonl</code> files from <code>sdp_results/</code> to begin.
+              Tick sweeps in the sidebar to plot them — they come from{' '}
+              <code>sdp_results/</code>.
             </p>
-            {files.length > 0 && <p className="empty-state__hint">Nothing is currently ticked to show.</p>}
+            {files.length > 0 && (
+              <p className="empty-state__hint">Nothing is currently ticked to show.</p>
+            )}
           </div>
         )}
       </main>

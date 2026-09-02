@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'Viewer/**'
+      # The sweeps are bundled into the page, so new results have to redeploy it.
+      - 'sdp_results/**'
       - '.github/workflows/deploy-viewer.yml'
   workflow_dispatch:
 

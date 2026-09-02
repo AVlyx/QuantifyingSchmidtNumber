@@ -2,10 +2,12 @@
 
 An interactive, fully client-side viewer for the SDP sweep results in
 `../sdp_results/`. It replaces the one-off matplotlib cells in `notebook_utils/plot_results.py`
-/ `sdp.ipynb`: drop result files in, tick the ones to show, rename them for the legend,
-recolor them, and read the plot.
+/ `sdp.ipynb`: tick sweeps in the sidebar, rename them for the legend, recolor them, and
+read the plot. `sdp_results/` ships with the app, so it opens with every sweep already
+listed; a file that is not committed yet can still be dropped in by hand.
 
-Stack: Vite + React + TypeScript, Plotly.js for rendering. No backend, no network calls.
+Stack: Vite + React + TypeScript, Plotly.js for rendering. No backend; the only network
+calls fetch the bundled result files from the app's own origin.
 
 ---
 
@@ -93,13 +95,16 @@ interface Record1D {
 }
 
 interface DataFile {
-  id: string;          // crypto.randomUUID()
+  id: string;          // "<folder>/<name>" for a catalog file, crypto.randomUUID() for an upload
+  source: 'catalog' | 'upload';
+  folder: string;      // sdp_results/ folder, or UPLOADS_FOLDER ("Added by you")
   fileName: string;    // original filename, shown as the row subtitle
   label: string;       // editable legend name, defaults to prettyLabel(fileName)
   color: string;       // hex, cycled from the palette when the file is added
   visible: boolean;    // the per-file "show its content" checkbox
-  records: Record1D[]; // sorted ascending by p; empty when error is set
-  error?: string;      // set instead of records when parsing failed
+  records: Record1D[]; // sorted ascending by p; empty when error is set or not loaded yet
+  error?: string;      // set instead of records when parsing or fetching failed
+  loaded: boolean;     // false for a catalog file whose records are still being fetched
 }
 
 interface Settings {
@@ -115,14 +120,18 @@ interface Settings {
 
 ### 2.1 Persistence
 
-The whole state (files, including their parsed records, plus settings) is written to
-`localStorage` under the key `sdp-viewer-v2`, debounced ~300 ms. It is restored on load,
-so dropped files and their names/colors survive a page reload. Writes are wrapped in
+State (files, settings, and which folder sections are collapsed) is written to
+`localStorage` under the key `sdp-viewer-v3`, debounced ~300 ms, and restored on load, so
+the chosen sweeps and their names/colors survive a page reload. Writes are wrapped in
 `try/catch`: on a quota error the app shows a non-blocking warning rather than crashing.
-All 30 result files together are well under 1 MB, comfortably inside the ~5 MB budget.
 
-The key is versioned: a `v1` payload holds records in the pre-`Et_lower` schema, which this
-build cannot plot, so bumping the key drops it instead of restoring a blank plot.
+Catalog files are stored **without** their records (`records: []`, `loaded: false`): the
+data is already served with the app, so an effect in `App.tsx` re-fetches every unloaded
+catalog file on mount, guarded by an in-flight set so each is fetched once. Uploaded files
+have no other home and are stored whole.
+
+The key is versioned: a `v2` payload has no `source`/`folder`/`loaded` on its files, so
+bumping the key drops it instead of restoring rows this build cannot interpret.
 
 "Clear all" (with confirmation) empties both the view and the stored state.
 
@@ -243,10 +252,25 @@ bound have nothing to act on here, and their controls are hidden.
 Two-column layout: a fixed ~320 px sidebar on the left, the plot filling the remaining
 width on the right and resizing with the window.
 
-### 4.1 Sidebar — file drop
+### 4.1 Sidebar — the `sdp_results/` catalog
 
-A dashed rounded drop area at the top. Accepts a multi-file drag-and-drop, highlights on
-drag-over, and is also clickable to open a file picker
+Below the global controls, one collapsible section per folder in
+`sdp_results/manifest.json`, in the manifest's order (`noise`, `vertex`, `lam21`, `convex`,
+`SN3`, `Parametric`, `test`, then any other folder alphabetically, with loose files at the
+root shown as *ungrouped*). Each header carries a caret, the folder name, and either the
+file count or `shown/total` once something in it is on screen; clicking toggles the section
+and the choice persists.
+
+An untouched file is one compact line: checkbox, name, size. Ticking it fetches
+`sdp_results/<folder>/<name>` and expands the row into the full controls of section 4.3.
+
+Files the user drops in appear in a final **"Added by you"** section, built from the series
+themselves since they have no manifest entry.
+
+### 4.1.1 Sidebar — add your own
+
+A `<details>` at the bottom of the sidebar holding a dashed drop area. Accepts a multi-file
+drag-and-drop, highlights on drag-over, and is also clickable to open a file picker
 (`<input type="file" multiple accept=".jsonl,.json">`). Files are read in the browser
 with `File.text()` and never leave the machine.
 
@@ -261,14 +285,15 @@ with `File.text()` and never leave the machine.
 | X-axis range | two number inputs, step 0.05 | empty / empty | Empty = fit the loaded sweeps. Each end is independent |
 | Clear all | button | — | Confirms, then wipes files and `localStorage` |
 
-### 4.3 Sidebar — file list
+### 4.3 Sidebar — a picked file's row
 
-One row per added file:
+One row per ticked file:
 
 - visibility checkbox — "show its content"
 - text input — the legend name (editable, defaults per §1.4)
 - color input (`<input type="color">`) — the series color
-- remove (×) button
+- remove (×) button — for a catalog file this drops the row's name/color back to the
+  defaults and unticks it; the file itself stays listed in its folder
 - a muted second line with the source filename, the record count, and — for a file with
   more than one `Et_lower` entry — the range of `t` it covers
 
@@ -278,7 +303,7 @@ button.
 ### 4.4 Plot area
 
 The Plotly chart, the symbol key (§3.3), and — when nothing has been added — the empty
-state: *"Drop `.jsonl` files from `sdp_results/` to begin."*
+state: *"Tick sweeps in the sidebar to plot them — they come from `sdp_results/`."*
 
 Styling is plain CSS with a system font stack; no CSS framework.
 
@@ -289,18 +314,37 @@ Styling is plain CSS with a system font stack; no CSS framework.
 ```
 Viewer/
   SPEC.md  README.md  index.html  package.json  vite.config.ts  tsconfig*.json
+  plugins/
+    sdpResults.ts                serves ../sdp_results in dev, emits it into dist on build
   src/
     main.tsx  App.tsx  styles.css  plotly.d.ts
     types.ts                     Record1D, DataFile, Settings, AppState, Action
     lib/
+      catalog.ts                 manifest + result-file fetching, BASE_URL-aware
       parseJsonl.ts              text -> records, plus componentCount
       prettyLabel.ts             filename -> default legend name
       palette.ts                 series colors
       buildTraces.ts             (files, settings) -> { data, layout }   [pure]
       usePersistedState.ts       localStorage-backed reducer wrapper
     components/
-      Sidebar.tsx  DropZone.tsx  GlobalControls.tsx  FileRow.tsx  PlotView.tsx
+      Sidebar.tsx  FolderSection.tsx  DropZone.tsx
+      GlobalControls.tsx  FileRow.tsx  PlotView.tsx
 ```
+
+### 5.1 Serving `sdp_results/`
+
+`sdp_results/` sits outside `Viewer/`, so it cannot be a `public/` asset. The `sdp-results`
+plugin covers both halves:
+
+- **dev** — a `configureServer` middleware answers `/sdp_results/manifest.json` by scanning
+  the folder per request (a sweep written while the server runs appears on the next reload)
+  and streams `/sdp_results/<folder>/<name>.jsonl` off disk, rejecting anything that walks
+  out of the folder or is not a `.jsonl`.
+- **build** — `buildStart` emits the same manifest and every `.jsonl` into
+  `dist/sdp_results/`, so the GitHub Pages bundle is self-contained.
+
+The client builds URLs from `import.meta.env.BASE_URL` (`/` in dev, `/<repo>/` on Pages)
+and escapes each path segment, since one sweep has a space in its name.
 
 `buildTraces.ts` holds all the plotting logic and imports nothing from Plotly, so it
 stays a pure, testable function. `PlotView.tsx` is the only Plotly-aware component: it
@@ -315,12 +359,12 @@ unmount, and drives `Plotly.Plots.resize` from a `ResizeObserver`.
 npm install && npm run dev
 ```
 
-Drop these files from `../sdp_results/`; each targets a different edge case.
+Tick these files in the sidebar; each targets a different edge case.
 
 | File | What it checks |
 | --- | --- |
 | `c3c3_isotropicSN3.jsonl` | The only file with two `Et_lower` entries. It must draw **two** curves in one color, the second dotted, legended `· E₁` and `· E₂`, and give **two** bars in histogram mode. |
-| `Ncomms6297_with_noise.jsonl` | Stops at `p = 0.06`. On its own the x axis must fit that span; dropped alongside a `convex_*` file (which runs to 1) it must shrink to the left of a full-width axis, and typing an explicit range must override both. |
+| `Ncomms6297_with_noise.jsonl` | Stops at `p = 0.06`. On its own the x axis must fit that span; shown alongside a `convex_*` file (which runs to 1) it must shrink to the left of a full-width axis, and typing an explicit range must override both. |
 | `c3c3_Horodecki.jsonl` | The only file with non-trivial `Et_upper` (7 points below 1.0, at `p ≤ 0.12`). Toggling the upper bound must show a dashed curve that is *not* flat at 1. |
 | `c3c3_Horodecki_lam21.jsonl` | `Et_upper` is `[null]` throughout — the upper-bound toggle must add nothing for it, silently, while still working for the file above. |
 | `Piani_with_noise.jsonl` | A single separable point with `Et_lower: [0]` — one marker on the floor line, which disappears when "show separable states" is turned off. |
