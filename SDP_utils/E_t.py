@@ -199,7 +199,7 @@ def E_t_lower_antisym(lam: list[int], P_lam: float, t: int, r: int):
     assert k <= r
 
     def ek(x: float):
-        res = math.comb(r - 1, k) * (((1 - x) / (r - 1)) ** (k - 1)) * (((k * x) / (r - k)) + ((1 - x) / (r - 1)))
+        res = math.comb(r, k) * ((1-x) / (r-1))**(k-1) * (x*r*(k-1) + r - k)/(r*(r-1)) - P_lam
         return res - P_lam
 
     try:
