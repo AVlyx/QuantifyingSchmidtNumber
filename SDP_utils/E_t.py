@@ -1,4 +1,5 @@
 import math
+from schur_weyl.sw_measure import schur_weyl_measure
 
 
 def max_Et(r: int, t: int):
@@ -16,136 +17,6 @@ def E_t_upperk2r2(P_lambda: float):
     return (1 - math.sqrt(1 - 4 * P_lambda)) / 2
 
 
-##########################################
-from math import factorial
-
-
-def f_lambda(lambda_: list[int]) -> int:
-    """Number of standard Young tableaux of shape lambda_, via the hook length formula."""
-    lam = [p for p in lambda_ if p != 0]
-    n = sum(lam)
-    if n == 0:
-        return 1
-
-    rows = len(lam)
-    # conjugate partition, to get column lengths
-    cols = [sum(1 for r in lam if r > j) for j in range(lam[0])]
-
-    hook_product = 1
-    for i in range(rows):
-        for j in range(lam[i]):
-            arm = lam[i] - j - 1  # cells to the right in same row
-            leg = cols[j] - i - 1  # cells below in same column
-            hook_product *= arm + leg + 1
-
-    return factorial(n) // hook_product
-
-
-from itertools import permutations
-
-
-def kostka_lambda_nu(lam: list[int], nu: list[int]) -> int:
-    n = sum(lam)
-    if sum(nu) != n:
-        return 0
-
-    # cell positions of the Young diagram, row by row
-    cells = []
-    for i, row_len in enumerate(lam):
-        for j in range(row_len):
-            cells.append((i, j))
-
-    # multiset of entries: value v (1-indexed) appears nu[v-1] times
-    values = []
-    for v, cnt in enumerate(nu, start=1):
-        values.extend([v] * cnt)
-
-    count = 0
-    for perm in set(permutations(values)):  # dedupe identical-value swaps
-        grid = dict(zip(cells, perm))
-
-        # rows weakly increasing
-        valid = True
-        for i, row_len in enumerate(lam):
-            for j in range(row_len - 1):
-                if grid[(i, j)] > grid[(i, j + 1)]:
-                    valid = False
-                    break
-            if not valid:
-                break
-
-        # columns strictly increasing
-        if valid:
-            num_cols = lam[0] if lam else 0
-            for j in range(num_cols):
-                col_vals = [grid[(i, j)] for i in range(len(lam)) if j < lam[i]]
-                for k in range(len(col_vals) - 1):
-                    if col_vals[k] >= col_vals[k + 1]:
-                        valid = False
-                        break
-                if not valid:
-                    break
-
-        if valid:
-            count += 1
-
-    return count
-
-
-from itertools import permutations
-
-
-def m_nu(nu: list[int], a_i: list[float]) -> float:
-    n_vars = len(a_i)
-
-    parts = [p for p in nu if p != 0]
-    if len(parts) > n_vars:
-        return 0.0
-
-    exponents = parts + [0] * (n_vars - len(parts))
-
-    total = 0.0
-    for exp_perm in set(permutations(exponents)):  # dedupe identical arrangements
-        term = 1.0
-        for a, e in zip(a_i, exp_perm):
-            term *= a**e
-        total += term
-
-    return total
-
-
-def integer_partitions(k: int):
-    """Yield all partitions of k as lists in weakly decreasing order."""
-    if k == 0:
-        yield []
-        return
-
-    def helper(remaining, max_part):
-        if remaining == 0:
-            yield []
-            return
-        for part in range(min(remaining, max_part), 0, -1):
-            for rest in helper(remaining - part, part):
-                yield [part] + rest
-
-    yield from helper(k, k)
-
-
-def expected_norm(lam: list[int], a_is: list[float]) -> float:
-    lam = [p for p in lam if p != 0]
-    k = sum(lam)
-
-    total = 0.0
-    for nu in integer_partitions(k):
-        K = kostka_lambda_nu(lam, nu)
-        if K == 0:
-            continue
-        total += K * m_nu(nu, a_is)
-
-    return f_lambda(lam) * total
-
-
-import numpy as np
 from scipy.optimize import brentq
 
 
@@ -155,7 +26,7 @@ def E_t_lower_lambda_r2(lam: list[int], P_lam: float) -> float:
         return 1 / 2
 
     def g(x):
-        return expected_norm(lam, [x, 1 - x]) - P_lam
+        return schur_weyl_measure([x, 1 - x], sum(lam))[tuple(lam)] - P_lam
 
     try:
         root: float = brentq(g, 1 / 2, 1, xtol=1e-10)  # type: ignore
@@ -199,19 +70,16 @@ def E_t_lower_antisym(lam: list[int], P_lam: float, t: int, r: int):
     assert k <= r
 
     def ek(x: float):
-        res = math.comb(r, k) * ((1-x) / (r-1))**(k-1) * (x*r*(k-1) + r - k)/(r*(r-1)) - P_lam
+        res = math.comb(r, k) * ((1 - x) / (r - 1)) ** (k - 1) * (x * r * (k - 1) + r - k) / (r * (r - 1)) - P_lam
         return res - P_lam
 
     try:
         root = brentq(ek, 1 / r * t, 1, xtol=1e-10)
     except ValueError:
-        return max_Et(r, t)
+        return -1
     if not root:
-        return max_Et(r, t)
-    return 1 - root + ((1 - root)/(r - t))**(t-1)  # type: ignore
-
-
-# print(E_t_lower_lambda_r2([2, 1], 0.0012))
+        return -1
+    return 1 - root + ((1 - root) / (r - t)) * t  # type: ignore
 
 
 def Et_lower(lam: list[int], P_lam: float, r: int) -> list[float]:
