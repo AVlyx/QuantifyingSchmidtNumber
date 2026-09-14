@@ -1,7 +1,7 @@
 import math
 import numpy as np
 from SDP_utils.combinatorics import occupation_index, nu_set_iterator, multinomial, nu_iterator, dim_sym_kd
-from SDP_utils.isotopic_proj import isotypic_projector
+from schur_weyl import isotypic_proj, partitions
 from scipy import sparse
 from toqito.perms import permute_systems
 
@@ -35,11 +35,12 @@ def W_l_builder(k: int, d: int, l: int):
     return sparse.csr_matrix((vals, (rows, cols)), shape=(dl * dkl, dim_sym_kd(k, d)))
 
 
-def isotypic_ot_I(m, n, k, lam):
-
-    Pi_lambda = isotypic_projector(lam, m, k)
+def isotypic_ot_I(m: int, n: int, k: int, height: int):
+    Pi = np.zeros((m**k, m**k))
+    for partition in partitions(k, height=height):
+        Pi += isotypic_proj(partition, m)
     I = np.identity(n**k)
-    M = np.kron(Pi_lambda, I)  # ordered A_1..A_k B_1..B_k
+    M = np.kron(Pi, I)  # ordered A_1..A_k B_1..B_k
 
     perm = [i // 2 + k * (i % 2) for i in range(2 * k)]  # Interleaved pattern
     return permute_systems(M, perm, [m] * k + [n] * k)  # now ordered A_1 B_1 ... A_k B_k
