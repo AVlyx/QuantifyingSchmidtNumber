@@ -208,7 +208,7 @@ def E_t_lower_antisym(lam: list[int], P_lam: float, t: int, r: int):
         return max_Et(r, t)
     if not root:
         return max_Et(r, t)
-    return 1 - root  # type: ignore
+    return 1 - root + ((1 - root)/(r - t))**(t-1)  # type: ignore
 
 
 # print(E_t_lower_lambda_r2([2, 1], 0.0012))
