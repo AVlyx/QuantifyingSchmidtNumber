@@ -16,7 +16,10 @@ def SDP(
     solver="qics",
     verbose=False,
     real=False,
+    exact_height=True,
 ) -> tuple[float, np.ndarray]:
+    """exact_height=True: objective uses the shapes of height == height (original convention).
+    exact_height=False: shapes of height >= height (nested in k, i.e. a monotone hierarchy)."""
     d, _ = rho.shape
     m, n = dims
     assert d == m * n
@@ -25,7 +28,7 @@ def SDP(
     V = V_builder(k, d)
     a_dag = [alpha_dag_j_builder(k, d, j) for j in range(d)]
     AdA = [[picos.Constant(Ad @ A.T) for A in a_dag] for Ad in a_dag]
-    VPi = picos.Constant(V @ isotypic_ot_I(m, n, k, height) @ V.T)
+    VPi = picos.Constant(V @ isotypic_ot_I(m, n, k, height, exact_height) @ V.T)
     Wls = [(picos.Constant(W_l_builder(k, d, l)), dim_sym_kd(l, d), dim_sym_kd(k - l, d)) for l in range(1, k // 2 + 1)]
 
     P = picos.Problem(verbosity=verbose)

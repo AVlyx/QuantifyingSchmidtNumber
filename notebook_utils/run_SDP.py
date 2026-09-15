@@ -56,7 +56,7 @@ def run_sdp_on_range(
             continue
 
         # * Early continue if objective shows separable
-        obj_min, _ = SDP(lam, state, dims, solver=solver, real=real)
+        obj_min, _ = SDP(len(lam), sum(lam), state, dims, solver=solver, real=real)
         if obj_min - tol <= 0:
             save_result(
                 folder,
@@ -78,7 +78,7 @@ def run_sdp_on_range(
             print("Compute upper not implemented for k >= 3")
             compute_upper = False
         if compute_upper:
-            obj_max, _ = SDP_max(lam, state, dims, solver=solver, real=real)
+            obj_max, _ = SDP_max(len(lam), sum(lam), state, dims, solver=solver, real=real)
             E1_upper: float | None = min(E_t_upperk2r2(obj_max), 1.0) if obj_max < 0.25 else 1.0
         else:
             obj_max = None
@@ -207,7 +207,7 @@ def bin_search_sdp_step(
         save_result(folder, filename, p, separability, 1, 0, [0] * (SN_tested_for - 1), None, [None])
         return (low, p) if decreasing else (p, high)
 
-    obj_min, _ = SDP(lam, state, dims, solver=solver, real=real)
+    obj_min, _ = SDP(len(lam), sum(lam), state, dims, solver=solver, real=real)
     if obj_min - tol <= 0:
         save_result(folder, filename, p, separability, 1, obj_min, [0] * (SN_tested_for - 1), None, [None])
         return (low, p) if decreasing else (p, high)

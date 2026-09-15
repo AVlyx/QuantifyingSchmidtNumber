@@ -35,9 +35,10 @@ def W_l_builder(k: int, d: int, l: int):
     return sparse.csr_matrix((vals, (rows, cols)), shape=(dl * dkl, dim_sym_kd(k, d)))
 
 
-def isotypic_ot_I(m: int, n: int, k: int, height: int):
+def isotypic_ot_I(m: int, n: int, k: int, height: int, exact_height: bool = True):
     Pi = np.zeros((m**k, m**k))
-    for partition in partitions(k, height=height):
+    parts = partitions(k, height=height) if exact_height else partitions(k, min_height=height)
+    for partition in parts:
         Pi += isotypic_proj(partition, m)
     I = np.identity(n**k)
     M = np.kron(Pi, I)  # ordered A_1..A_k B_1..B_k
