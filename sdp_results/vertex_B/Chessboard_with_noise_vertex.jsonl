@@ -1,0 +1,12 @@
+{"p":0.0,"separability":0,"minSchmidtNumber":2,"objective":0.055549970372241735,"Et_lower":[0.05903511520209426],"objective_max":null,"Et_upper":[null]}
+{"p":0.125,"separability":0,"minSchmidtNumber":2,"objective":0.0026717194938236286,"Et_lower":[0.0026788959774824983],"objective_max":null,"Et_upper":[null]}
+{"p":0.1875,"separability":0,"minSchmidtNumber":2,"objective":0.00006276944804539403,"Et_lower":[0.00006277338854365766],"objective_max":null,"Et_upper":[null]}
+{"p":0.1953125,"separability":0,"minSchmidtNumber":2,"objective":8.651760121861866e-6,"Et_lower":[8.651834976114436e-6],"objective_max":null,"Et_upper":[null]}
+{"p":0.19921875,"separability":0,"minSchmidtNumber":2,"objective":2.368038158474632e-7,"Et_lower":[2.3680392802205574e-7],"objective_max":null,"Et_upper":[null]}
+{"p":0.2001953125,"separability":1,"minSchmidtNumber":1,"objective":-3.1853039398396094e-8,"Et_lower":[0.0],"objective_max":null,"Et_upper":[null]}
+{"p":0.201171875,"separability":1,"minSchmidtNumber":1,"objective":-2.521214384400977e-9,"Et_lower":[0.0],"objective_max":null,"Et_upper":[null]}
+{"p":0.203125,"separability":1,"minSchmidtNumber":1,"objective":-4.349717339265091e-8,"Et_lower":[0.0],"objective_max":null,"Et_upper":[null]}
+{"p":0.21875,"separability":1,"minSchmidtNumber":1,"objective":-2.5007236533272637e-9,"Et_lower":[0.0],"objective_max":null,"Et_upper":[null]}
+{"p":0.25,"separability":1,"minSchmidtNumber":1,"objective":-7.073081265650261e-9,"Et_lower":[0.0],"objective_max":null,"Et_upper":[null]}
+{"p":0.5,"separability":2,"minSchmidtNumber":1,"objective":0.0,"Et_lower":[0.0],"objective_max":null,"Et_upper":[null]}
+{"p":1.0,"separability":2,"minSchmidtNumber":1,"objective":0.0,"Et_lower":[0.0],"objective_max":null,"Et_upper":[null]}
