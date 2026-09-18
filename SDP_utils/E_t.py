@@ -1,5 +1,6 @@
 import math
 from schur_weyl.sw_measure import schur_weyl_measure
+from scipy.optimize import brentq, minimize_scalar
 
 
 def max_Et(r: int, t: int):
@@ -15,9 +16,6 @@ def E_t_upperk2r2(P_lambda: float):
     if P_lambda > 0.25:
         return 1
     return (1 - math.sqrt(1 - 4 * P_lambda)) / 2
-
-
-from scipy.optimize import brentq
 
 
 def E_t_lower_lambda_r2(lam: list[int], P_lam: float) -> float:
@@ -70,13 +68,14 @@ def E_t_lower_antisym(lam: list[int], P_lam: float, t: int, r: int):
     assert k <= r
 
     def ek(x: float):
-        res = math.comb(r, k) * ((1 - x) / (r - 1)) ** (k - 1) * (x * r * (k - 1) + r - k) / (r * (r - 1)) - P_lam
+        res = schur_weyl_measure([x] + [(1 - x) / (k - 1)] * (k - 1), k)[tuple(lam)]
         return res - P_lam
 
-    try:
-        root = brentq(ek, 1 / r * t, 1, xtol=1e-10)
-    except ValueError:
-        return -1
+    # if ek(1 / r) < 0 and ek(1) < 0 and P_lam - ek(1 / r) < 1e-7:
+    #     return 1 / r
+
+    # print(f"f(a) f(b) {ek(1/r)}, {ek(1)}")
+    root = brentq(ek, 1 / r, 1, xtol=1e-10)
     if not root:
         return -1
     return 1 - root + ((1 - root) / (r - t)) * t  # type: ignore

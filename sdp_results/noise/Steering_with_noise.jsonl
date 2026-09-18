@@ -1,9 +1,9 @@
 {"p":0.0,"separability":0,"minSchmidtNumber":2,"objective":0.05016671926595194,"Et_lower":[0.05297284116835543],"objective_max":0.291376871301628,"Et_upper":[1.0]}
 {"p":0.02,"separability":0,"minSchmidtNumber":2,"objective":0.024734560195265216,"Et_lower":[0.02537863532629059],"objective_max":0.2948983148457281,"Et_upper":[1.0]}
-{"p":0.04,"separability":0,"minSchmidtNumber":2,"objective":0.014732869999365752,"Et_lower":[0.014956568978020113],"objective_max":0.29633816155033904,"Et_upper":[1.0]}
-{"p":0.06,"separability":0,"minSchmidtNumber":2,"objective":0.008593704347456052,"Et_lower":[0.008668853367018503],"objective_max":0.29768841937074464,"Et_upper":[1.0]}
+{"p":0.04,"separability":0,"minSchmidtNumber":2,"objective":0.014732869999365752,"Et_lower":[0.014956568978020002],"objective_max":0.29633816155033904,"Et_upper":[1.0]}
+{"p":0.06,"separability":0,"minSchmidtNumber":2,"objective":0.008593704347456052,"Et_lower":[0.008668853367018392],"objective_max":0.29768841937074464,"Et_upper":[1.0]}
 {"p":0.08,"separability":0,"minSchmidtNumber":2,"objective":0.004605622512590884,"Et_lower":[0.004627031937158188],"objective_max":0.2990045053826243,"Et_upper":[1.0]}
 {"p":0.1,"separability":0,"minSchmidtNumber":2,"objective":0.002073574826108604,"Et_lower":[0.0020778924757585138],"objective_max":0.3002911784326808,"Et_upper":[1.0]}
-{"p":0.12,"separability":0,"minSchmidtNumber":2,"objective":0.0006263513413547379,"Et_lower":[0.0006267441492747716],"objective_max":0.30154290999233574,"Et_upper":[1.0]}
-{"p":0.14,"separability":0,"minSchmidtNumber":2,"objective":0.00003506788854440214,"Et_lower":[0.00003506911838746518],"objective_max":0.30276894306180946,"Et_upper":[1.0]}
+{"p":0.12,"separability":0,"minSchmidtNumber":2,"objective":0.0006263513413547379,"Et_lower":[0.0006267441492748826],"objective_max":0.30154290999233574,"Et_upper":[1.0]}
+{"p":0.14,"separability":0,"minSchmidtNumber":2,"objective":0.00003506788854440214,"Et_lower":[0.00003506911838735416],"objective_max":0.30276894306180946,"Et_upper":[1.0]}
 {"p":0.16,"separability":1,"minSchmidtNumber":1,"objective":-2.42885376747159e-8,"Et_lower":[0.0],"objective_max":1.0,"Et_upper":[0.5]}
